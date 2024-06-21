@@ -1,0 +1,43 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <link rel="stylesheet" href="/CSS/Home.css">
+</head>
+<body>
+    <div class="login-container">
+        <img src="/Images/logo.png" alt="Logo">
+        <form id="loginForm">
+            <div class="input-container">
+                <label for="username">Username</label>
+                <div class="input-icon-container">
+                    <i class="ms-Icon ms-Icon--Contact"></i>
+                    <input type="text" id="username" placeholder="Enter your username" required>
+                </div>
+            </div>
+            <div class="input-container">
+                <label for="password">Password</label>
+                <div class="input-icon-container">
+                    <i class="ms-Icon ms-Icon--Lock"></i>
+                    <input type="password" id="password" placeholder="Enter your password" required>
+                    <i class="ms-Icon ms-Icon--RedEye"></i>
+                </div>
+            </div>
+            <button type="submit" id="signInButton">Sign In</button>
+            <button type="button" id="registerButton" class="register-button">Register</button>
+        </form>
+        <div id="spinner" class="spinner">
+            <div class="spinner-logo">
+                <img src="/Images/loading.svg" alt="Loading" class="loading">
+            </div>
+            <p class="loading-text">Loading<span class="dot1">.</span><span class="dot2">.</span><span class="dot3">.</span></p>
+        </div>
+    </div>
+    <div id="notification" class="notification"></div>
+    <!-- The bundle.js will be injected by Webpack into the dist/index.html -->
+    <script src="/dist/Home.bundle.js" defer></script>
+</body>
+</html>

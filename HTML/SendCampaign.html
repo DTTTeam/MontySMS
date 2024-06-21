@@ -1,0 +1,36 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="../css/sendCampaign.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="../dist/sendCampaign.bundle.js" defer></script>
+</head>
+<body>
+    <div class="container">
+        <div class="title-container">
+            <!--<h1 class="colorfulTitle">
+                <span>S</span><span>e</span><span>n</span><span>d</span> <span>C</span><span>a</span><span>m</span><span>p</span><span>a</span><span>i</span><span>g</span><span>n</span>
+            </h1>-->
+        </div>
+
+        <div id="statsContainer">
+            <div id="campaignName" class="stat-item campaign-name">Campaign: <span></span></div>
+            <div id="totalCost" class="stat-item total-cost">Total Cost: <span></span></div>
+            <div id="invalidUrl" class="stat-item invalid-url">Invalid URL: <a href="" target="_blank">Click here</a></div>
+            <div id="totalValidCount" class="stat-item valid-numbers">Valid Numbers: <span></span></div>
+            <div id="totalInValidCount" class="stat-item invalid-numbers">Invalid Numbers: <span></span></div>
+            <canvas id="validationChart"></canvas>
+        </div>
+        <div class="button-group">
+            <button id="sendButton" class="btn">Send SMS</button>
+            <button id="backButton" class="btn">Back</button>
+        </div>
+        <div id="loadingIndicator" style="display:none;">
+            <img src="../images/loading.svg" alt="Loading...">
+        </div>
+        <div id="notification" class="notification"></div>
+    </div>
+</body>
+</html>

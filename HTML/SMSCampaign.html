@@ -1,0 +1,110 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMS Campaign Without Template</title>
+    <link rel="stylesheet" href="../css/SMSCampaign.css">
+    <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.2.1/exceljs.min.js"></script>
+</head>
+<body>
+    <div class="campaign-container">
+        <div class="loading" id="loadingIndicator">
+            <img src="../images/loading.svg" alt="Loading...">
+        </div>
+        <div class="balance-container">
+            <div id="currentBalance" class="balance-label">Loading...</div>
+        </div>
+        <form id="campaignForm">
+            <div class="form-section">
+                <label for="campaignName" class="form-label">Campaign Name</label>
+                <input type="text" id="campaignName" placeholder="Enter campaign name" required>
+            </div>
+            <div class="form-section">
+                <label for="sender" class="form-label">Sender</label>
+                <select id="sender" required>
+                    <option value="">Select a sender</option>
+                </select>
+            </div>
+            <div class="form-section">
+                <label for="columnTypeDropdown" class="form-label">Column Type</label>
+                <select id="columnTypeDropdown">
+                    <option value="Header">Header</option>
+                    <option value="Variable">Variable</option>
+                </select>
+            </div>
+            <div class="form-section">
+                <label for="group" class="form-label">Group</label>
+                <div class="dropdown">
+                    <button type="button" id="groupDropdownButton" class="dropdown-button">Select Groups</button>
+                    <div id="groupDropdownContent" class="dropdown-content">
+                        <input type="text" id="groupSearch" placeholder="Search for groups..." onkeyup="filterGroups()">
+                        <!-- Checkbox options will be populated dynamically -->
+                    </div>
+                </div>
+            </div>
+            <div class="form-section">
+                <label for="contact" class="form-label">Contact</label>
+                <div class="dropdown">
+                    <button type="button" id="contactDropdownButton" class="dropdown-button">Select Contacts</button>
+                    <div id="contactDropdownContent" class="dropdown-content">
+                        <input type="text" id="contactSearch" placeholder="Search for contacts..." onkeyup="filterContacts()">
+                        <!-- Checkbox options will be populated dynamically -->
+                    </div>
+                </div>
+            </div>
+            <div class="form-section">
+                <label for="template" class="form-label">Template</label>
+                <select id="template">
+                    <option value="">Select a template</option>
+                </select>
+            </div>
+            <div class="form-section">
+                <label for="message" class="form-label">Message</label>
+                <textarea id="message" placeholder="Enter your message"></textarea>
+                <div id="messageCounterContainer">
+                    <div class="left-buttons">
+                        <button type="button" id="dropdownButton" class="dropdown-button">+</button>
+                        <button type="button" id="shortenUrlButton" class="img-button">
+                            <img src="../images/ShortLink.png" alt="Shorten URL" />
+                        </button>
+                    </div>
+                    <p id="messageCounter">0/160 characters | 160 characters left | 1 message</p>
+                    <div id="dropdownContent" class="dropdown-content">
+                        <label><input type="checkbox" value="LongUrl"> LongUrl</label>
+                        <label><input type="checkbox" value="Title"> Title</label>
+                        <label><input type="checkbox" value="FirstName"> FirstName</label>
+                        <label><input type="checkbox" value="LastName"> LastName</label>
+                        <label><input type="checkbox" value="Country"> Country</label>
+                        <label><input type="checkbox" value="Email"> Email</label>
+                        <label><input type="checkbox" value="Address"> Address</label>
+                        <label><input type="checkbox" value="City"> City</label>
+                        <label><input type="checkbox" value="Gender"> Gender</label>
+                    </div>
+                </div>
+            </div>
+            <div class="button-group">
+                <button type="button" id="backButton" class="btn">Back</button>
+                <button type="submit" id="launchButton" class="btn">Validate</button>
+            </div>
+        </form>
+    </div>
+    <div id="notification" class="notification"></div>
+
+    <!-- Modal Form for URL Input -->
+    <div id="urlModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <form id="urlForm">
+                <label for="longUrl" class="form-label">Enter URL:</label>
+                <input type="text" id="longUrl" name="longUrl" required>
+                <button type="submit" class="btn">Add</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="../dist/SMSCampaign.bundle.js" defer></script>
+</body>
+</html>
