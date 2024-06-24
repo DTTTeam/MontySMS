@@ -748,6 +748,71 @@ function extractPlaceholders(message) {
 
 
 //Campaign
+function validateAndFillMobileNumbers() {
+    Excel.run(async (context) => {
+        const sheet = context.workbook.worksheets.getActiveWorksheet();
+        const usedRange = sheet.getUsedRange();
+        usedRange.load('values, columnCount');
+
+        await context.sync();
+
+        const phoneNumberColumnIndex = usedRange.values[0].indexOf('Mobile Number');
+        const validColumnIndex = usedRange.values[0].indexOf('Valid');
+        const codeColumnIndex = usedRange.values[0].indexOf('Code');
+
+        if (phoneNumberColumnIndex === -1) {
+            console.error('Mobile Number column not found');
+            return;
+        }
+
+        for (let rowIndex = 1; rowIndex < usedRange.values.length; rowIndex++) {
+            let phoneNumber = usedRange.values[rowIndex][phoneNumberColumnIndex];
+
+            // Convert to string and trim spaces
+            if (phoneNumber !== null && phoneNumber !== undefined) {
+                phoneNumber = String(phoneNumber).trim();
+
+                // Add '+' sign if it's not already present
+                if (!phoneNumber.startsWith('+')) {
+                    phoneNumber = '+' + phoneNumber;
+                }
+
+                console.log(`Processing row ${rowIndex + 1}: ${phoneNumber}`);
+                const parsedNumber = libphonenumber.parsePhoneNumberFromString(phoneNumber);
+
+                if (parsedNumber) {
+                    console.log(`Parsed number: ${parsedNumber.number}, isValid: ${parsedNumber.isValid()}`);
+                } else {
+                    console.log('Parsed number is null');
+                }
+
+                if (parsedNumber && parsedNumber.isValid()) {
+                    const country = parsedNumber.country;
+                    sheet.getCell(rowIndex, validColumnIndex).values = [["Valid"]];
+                    sheet.getCell(rowIndex, codeColumnIndex).values = [[country]];
+                    // Set valid background color
+                    sheet.getRangeByIndexes(rowIndex, validColumnIndex, 1, 1).format.fill.color = '#4caf50'; // Green
+                } else {
+                    sheet.getCell(rowIndex, validColumnIndex).values = [["Invalid"]];
+                    sheet.getCell(rowIndex, codeColumnIndex).values = [[""]];
+                    // Set invalid background color
+                    sheet.getRangeByIndexes(rowIndex, validColumnIndex, 1, 1).format.fill.color = '#f44336'; // Red
+                }
+            } else {
+                console.log(`Row ${rowIndex + 1} contains an invalid value`);
+                sheet.getCell(rowIndex, validColumnIndex).values = [["Invalid"]];
+                sheet.getCell(rowIndex, codeColumnIndex).values = [[""]];
+                // Set invalid background color
+                sheet.getRangeByIndexes(rowIndex, validColumnIndex, 1, 1).format.fill.color = '#f44336'; // Red
+            }
+        }
+
+        await context.sync();
+        console.log('Mobile numbers validated and code filled successfully');
+    }).catch((error) => {
+        console.error('Error validating mobile numbers:', error);
+    });
+}
 async function downloadExcelFile(data) {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Sheet1");
@@ -784,29 +849,12 @@ async function downloadExcelFile(data) {
     document.body.removeChild(anchor);
     window.URL.revokeObjectURL(url);
 }
-function handleValidationSuccess(response, campaignName) {
-
-    const data = response.data;
-
-    var validationData = {
-        campaignName: campaignName,
-        campaignId: data.campaignId,
-        validUrl: data.validUrl || '', // Handle null values
-        inValidUrl: data.inValidUrl || '', // Handle null values
-        totalValidCount: data.totalValidCount || 0, // Handle null values
-        totalInValidCount: data.totalInValidCount || 0, // Handle null values
-        totalCost: data.totalValidRate || 0, // Handle null values
-        reason: data.reason || '' // Handle null values
-    };
-    console.log(validationData);
-    localStorage.setItem('validationData', JSON.stringify(validationData));
-    saveFormData();
-    window.location.href = 'SendCampaign.html';
-}
 function handleValidationError() {
     isCampaignLaunching = false;
 }
 async function validateCampaignNormally(campaignName, campaignContent, senderId, phoneNumbers, hasShortUrl, longUrl) {
+
+    validateAndFillMobileNumbers();
     const apiValidate = process.env.API_Validate;
     const placeholders = extractPlaceholders(campaignContent);
 
@@ -996,7 +1044,6 @@ function launchCampaign() {
         isCampaignLaunching = false;
     });
 }
-
 
 
 

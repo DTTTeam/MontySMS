@@ -6,6 +6,7 @@
     <link rel="stylesheet" type="text/css" href="https://DTTTeam.github.io/MontySMS/CSS/SendCampaign.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://DTTTeam.github.io/MontySMS/dist/SendCampaign.bundle.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation"></script>
 </head>
 <body>
     <div class="container">
@@ -22,6 +23,7 @@
             <div id="totalValidCount" class="stat-item valid-numbers">Valid Numbers: <span></span></div>
             <div id="totalInValidCount" class="stat-item invalid-numbers">Invalid Numbers: <span></span></div>
             <canvas id="validationChart"></canvas>
+            <canvas id="countryCodeChart"></canvas>
         </div>
         <div class="button-group">
             <button id="sendButton" class="btn">Send SMS</button>
