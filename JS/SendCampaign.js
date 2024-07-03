@@ -194,13 +194,15 @@ const countryFlagUrls = {
     'ZM': 'https://upload.wikimedia.org/wikipedia/commons/0/06/Flag_of_Zambia.svg',
     'ZW': 'https://upload.wikimedia.org/wikipedia/commons/6/6a/Flag_of_Zimbabwe.svg'
 };
-Office.onReady((info) => {
+
+document.addEventListener("DOMContentLoaded", function () {
+    Office.onReady(function (info) {
     if (info.host === Office.HostType.Excel) {
         console.log("Office.js is ready.");
         initializeAddIn();
     }
 });
-
+});
 function initializeAddIn() {
     console.log("Initializing Add-In");
 
