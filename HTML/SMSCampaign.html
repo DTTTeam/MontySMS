@@ -9,6 +9,7 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.2.1/exceljs.min.js"></script>
     <script src="https://unpkg.com/libphonenumber-js/bundle/libphonenumber-max.js"></script>
+
 </head>
 <body>
     <div class="campaign-container">
@@ -94,18 +95,23 @@
     </div>
     <div id="notification" class="notification"></div>
 
-    <!-- Modal Form for URL Input -->
     <div id="urlModal" class="modal">
         <div class="modal-content">
-            <span class="close">&times;</span>
+            <div class="modal-header">
+                <span class="close">&times;</span>
+            </div>
             <form id="urlForm">
                 <label for="longUrl" class="form-label">Enter URL:</label>
                 <input type="text" id="longUrl" name="longUrl" required>
-                <button type="submit" class="btn">Add</button>
+                <div class="button-container">
+                    <button type="submit" class="btn">Add</button>
+                </div>
             </form>
         </div>
     </div>
 
+
+  
     <script src="https://DTTTeam.github.io/MontySMS/dist/SMSCampaign.bundle.js" defer></script>
 </body>
 </html>

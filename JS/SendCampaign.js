@@ -194,144 +194,321 @@ const countryFlagUrls = {
     'ZM': 'https://upload.wikimedia.org/wikipedia/commons/0/06/Flag_of_Zambia.svg',
     'ZW': 'https://upload.wikimedia.org/wikipedia/commons/6/6a/Flag_of_Zimbabwe.svg'
 };
-document.addEventListener("DOMContentLoaded", () => {
-    const validationData = JSON.parse(localStorage.getItem('validationData'));
-
-    if (validationData) {
-        displayValidationData(validationData);
-        setupEventListeners(validationData.campaignId);
-        showLoadingIndicator(false);
+Office.onReady((info) => {
+    if (info.host === Office.HostType.Excel) {
+        console.log("Office.js is ready.");
+        initializeAddIn();
     }
 });
 
-// Display validation data in the UI
-function displayValidationInfo(validationData) { // Renamed function
-    if (validationData.campaignName) {
-        document.querySelector('#campaignName span').textContent = validationData.campaignName;
-    }
-    if (validationData.totalCost !== undefined) {
-        document.querySelector('#totalCost span').textContent = validationData.totalCost;
-    }
-    if (validationData.inValidUrl && validationData.inValidUrl.trim() !== "") {
-        const invalidUrlElem = document.querySelector('#invalidUrl a');
-        invalidUrlElem.href = validationData.inValidUrl;
-    } else {
-        document.getElementById('invalidUrl').style.display = 'none';
-    }
-    if (validationData.totalValidCount !== undefined) {
-        document.querySelector('#totalValidCount span').textContent = validationData.totalValidCount;
-    }
-    if (validationData.totalInValidCount !== undefined && validationData.totalInValidCount > 0) {
-        document.querySelector('#totalInValidCount span').textContent = validationData.totalInValidCount;
-    } else {
-        document.getElementById('totalInValidCount').style.display = 'none';
+function initializeAddIn() {
+    console.log("Initializing Add-In");
+
+    const validationData = JSON.parse(localStorage.getItem('validationData'));
+    console.log('Validation Data:', validationData);
+
+    if (validationData) {
+        displayValidationInfo(validationData);
+        setupEventListeners(validationData.campaignId);
+        showLoadingIndicator(false);
     }
 
-    renderValidationChart(validationData.totalValidCount, validationData.totalInValidCount);
-    renderCountryCodeChart(validationData.countryCodes); // Add this line
+    // Show loading indicator before reading data
+    showLoadingIndicator(true);
+
+    // Read mobile numbers from Excel and process them
+    readMobileNumbersFromExcel();
+    createChartLegend();
 }
+
+function displayValidationInfo(validationData) {
+    console.log("Displaying validation info.");
+
+    const campaignNameElem = document.querySelector('#campaignName');
+    if (campaignNameElem) {
+        campaignNameElem.textContent = validationData.campaignName;
+    }
+
+    const totalCostElem = document.querySelector('#totalCost span');
+    if (totalCostElem) {
+        totalCostElem.textContent = parseFloat(validationData.totalCost).toFixed(2);
+    }
+
+    if (validationData.inValidUrl && validationData.inValidUrl.trim() !== "") {
+        const invalidUrlElem = document.querySelector('#invalidUrl a');
+        if (invalidUrlElem) {
+            invalidUrlElem.href = validationData.inValidUrl;
+        }
+    } else {
+        const invalidUrlDiv = document.getElementById('invalidUrl');
+        if (invalidUrlDiv) {
+            invalidUrlDiv.style.display = 'none';
+        }
+    }
+
+    const totalValidCountElem = document.querySelector('#totalValidCount span');
+    if (totalValidCountElem) {
+        totalValidCountElem.textContent = validationData.totalValidCount;
+    }
+
+    const totalInValidCountElem = document.querySelector('#totalInValidCount span');
+    if (totalInValidCountElem) {
+        if (validationData.totalInValidCount > 0) {
+            totalInValidCountElem.textContent = validationData.totalInValidCount;
+        } else {
+            const totalInValidCountDiv = document.getElementById('totalInValidCount');
+            if (totalInValidCountDiv) {
+                totalInValidCountDiv.style.display = 'none';
+            }
+        }
+    }
+
+    // Render the validation chart as a pie chart
+    renderValidationChart(validationData.totalValidCount, validationData.totalInValidCount);
+}
+
 function renderValidationChart(validCount, invalidCount) {
     const ctx = document.getElementById('validationChart').getContext('2d');
     new Chart(ctx, {
-        type: 'bar',
+        type: 'pie',
         data: {
             labels: ['Valid', 'Invalid'],
             datasets: [{
-                label: 'Numbers',
                 data: [validCount, invalidCount],
-                backgroundColor: [
-                    '#4caf50', // Green for valid
-                    '#f44336', // Red for invalid
-                ],
-                borderColor: [
-                    '#4caf50',
-                    '#f44336',
-                ],
+                backgroundColor: ['#4caf50', '#f44336'],
+                borderColor: ['#4caf50', '#f44336'],
                 borderWidth: 1
             }]
         },
         options: {
-            scales: {
-                x: {
-                    grid: {
-                        display: false // Remove vertical grid lines
-                    }
-                },
-                y: {
-                    beginAtZero: true,
-                    grid: {
-                        display: false // Remove horizontal grid lines
-                    }
-                }
-            },
-            responsive: true,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            }
-        }
-    });
-}
-function renderCountryCodeChart(countryCodes) {
-    const ctx = document.getElementById('countryCodeChart').getContext('2d');
-
-    // Prepare country code data for the chart
-    const countryLabels = Object.keys(countryCodes);
-    const countryData = Object.values(countryCodes);
-
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: countryLabels,
-            datasets: [{
-                label: 'Numbers by Country Code',
-                data: countryData,
-                backgroundColor: '#2196f3', // Uniform blue color for all bars
-                borderColor: '#1976d2', // Uniform darker blue color for all borders
-                borderWidth: 1
-            }]
-        },
-        options: {
-            scales: {
-                x: {
-                    grid: {
-                        display: false // Remove vertical grid lines
-                    }
-                },
-                y: {
-                    beginAtZero: true,
-                    grid: {
-                        display: false // Remove horizontal grid lines
-                    }
-                }
-            },
             responsive: true,
             plugins: {
                 legend: {
                     display: false
                 },
-                annotation: {
-                    annotations: countryLabels.map((countryCode, index) => ({
-                        type: 'label',
-                        drawTime: 'afterDatasetsDraw',
-                        content: function (context) {
-                            const img = new Image();
-                            img.src = countryFlagUrls[countryCode];
-                            return img;
-                        },
-                        xValue: index,
-                        yValue: countryData[index] * 0.1, // Adjust this value to move the flag up
-                        width: 20,
-                        height: 12,
-                        position: 'outside'
-                    }))
+                tooltip: {
+                    callbacks: {
+                        label: function (context) {
+                            const label = context.label || '';
+                            const value = context.raw;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = (value / total * 100).toFixed(2) + '%';
+                            return label + ': ' + percentage;
+                        }
+                    }
+                },
+                datalabels: {
+                    color: '#fff',
+                    formatter: (value, context) => {
+                        const total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                        const percentage = (value / total * 100).toFixed(2) + '%';
+                        return percentage;
+                    }
                 }
             }
+        },
+        plugins: [ChartDataLabels]
+    });
+
+    createChartLegend();
+}
+
+// Create legend manually
+function createChartLegend() {
+    const legendContainer = document.querySelector('.chart-legend');
+    legendContainer.innerHTML = ''; // Clear previous legend
+
+    const validLegend = document.createElement('div');
+    validLegend.innerHTML = '<div style="background-color: #4caf50; width: 20px; height: 20px;"></div><span>Valid </span>';
+
+    const invalidLegend = document.createElement('div');
+    invalidLegend.innerHTML = '<div style="background-color: #f44336; width: 20px; height: 20px;"></div><span>Invalid </span>';
+
+    legendContainer.appendChild(validLegend);
+    legendContainer.appendChild(invalidLegend);
+}
+
+// Call this function after rendering the chart
+
+
+
+function renderCountryStats(countryCodes) {
+    const countryStatsContainer = document.getElementById('countryStats');
+    countryStatsContainer.innerHTML = '';
+
+    const sortedCountryCodes = Object.keys(countryCodes).sort((a, b) => countryCodes[b] - countryCodes[a]);
+
+    sortedCountryCodes.forEach(countryCode => {
+        const flagUrl = countryFlagUrls[countryCode];
+        const count = countryCodes[countryCode];
+
+        const countryItem = document.createElement('div');
+        countryItem.className = 'country-item';
+
+        if (flagUrl) {
+            const flagImg = document.createElement('img');
+            flagImg.src = flagUrl;
+            flagImg.alt = `${countryCode} flag`;
+
+            countryItem.appendChild(flagImg);
+        } else {
+            
         }
+
+        const countryText = document.createElement('span');
+        countryText.textContent = `${countryCode}: ${count}`;
+
+        countryItem.appendChild(countryText);
+        countryStatsContainer.appendChild(countryItem);
     });
 }
-// Set up event listeners for buttons
+
+
+
+
+
+function readMobileNumbersFromExcel() {
+  
+    Excel.run(function (context) {
+        const sheet = context.workbook.worksheets.getActiveWorksheet();
+        const usedRange = sheet.getUsedRange();
+        usedRange.load("rowCount");
+
+        return context.sync().then(function () {
+            const range = sheet.getRange("A2:A" + usedRange.rowCount);
+            range.load("values");
+
+            return context.sync().then(function () {
+                const mobileNumbers = range.values.flat();
+               
+                const countryCodes = extractCountryCodes(mobileNumbers);
+           ;
+                renderCountryStats(countryCodes);
+
+                // Hide loading indicator after data is processed
+                showLoadingIndicator(false);
+            });
+        });
+    }).catch(function (error) {
+        console.error("Error reading mobile numbers from Excel:", error);
+        // Hide loading indicator in case of error
+        showLoadingIndicator(false);
+    });
+}
+
+function extractCountryCodes(mobileNumbers) {
+    const countryCodes = {};
+    mobileNumbers.forEach(number => {
+        try {
+   
+            const parsedNumber = libphonenumber.parsePhoneNumberFromString(String(number), 'LB'); // Specify default region 'LB'
+          
+            if (parsedNumber) {
+                const countryCode = parsedNumber.country;
+                const countryCallingCode = parsedNumber.countryCallingCode;
+ 
+                if (countryCode) {
+                    if (countryCode in countryCodes) {
+                        countryCodes[countryCode]++;
+                    } else {
+                        countryCodes[countryCode] = 1;
+                    }
+                } else {
+                    
+                }
+            }
+        } catch (e) {
+            console.error('Error parsing number:', number, e);
+        }
+    });
+    return countryCodes;
+}
+
+//function renderValidationChart(validCount, invalidCount) {
+//    const ctx = document.getElementById('validationChart').getContext('2d');
+//    new Chart(ctx, {
+//        type: 'bar',
+//        data: {
+//            labels: ['Valid', 'Invalid'],
+//            datasets: [{
+//                label: 'Numbers',
+//                data: [validCount, invalidCount],
+//                backgroundColor: [
+//                    '#4caf50', // Green for valid
+//                    '#f44336', // Red for invalid
+//                ],
+//                borderColor: [
+//                    '#4caf50',
+//                    '#f44336',
+//                ],
+//                borderWidth: 1,
+//                barPercentage: 0.5, // Adjust this value to control the bar width
+//                categoryPercentage: 0.5 // Adjust this value to control the bar width
+//            }]
+//        },
+//        options: {
+//            scales: {
+//                x: {
+//                    grid: {
+//                        display: false // Remove vertical grid lines
+//                    },
+//                    ticks: {
+//                        padding: 10 // Adjust this value for label padding
+//                    }
+//                },
+//                y: {
+//                    beginAtZero: true,
+//                    grid: {
+//                        display: false // Remove horizontal grid lines
+//                    }
+//                }
+//            },
+//            responsive: true,
+//            plugins: {
+//                legend: {
+//                    display: false
+//                }
+//            }
+//        }
+//    });
+//}
+
+//function renderCountryStats(countryCodes) {
+//    const countryStatsContainer = document.getElementById('countryStats');
+//    countryStatsContainer.innerHTML = '';
+
+//    // Sort country codes by count (descending order)
+//    const sortedCountryCodes = Object.keys(countryCodes).sort((a, b) => countryCodes[b] - countryCodes[a]);
+
+//    sortedCountryCodes.forEach(countryCode => {
+//        const flagUrl = countryFlagUrls[countryCode];
+//        const count = countryCodes[countryCode];
+
+//        const countryItem = document.createElement('div');
+//        countryItem.className = 'country-item';
+
+//        if (flagUrl) {
+//            const flagImg = document.createElement('img');
+//            flagImg.src = flagUrl;
+//            flagImg.alt = `${countryCode} flag`;
+
+//            countryItem.appendChild(flagImg);
+//        } else {
+//            console.error(`No flag URL found for country code ${countryCode}`);
+//        }
+
+//        const countryText = document.createElement('span');
+//        countryText.textContent = `${countryCode}: ${count}`;
+
+//        countryItem.appendChild(countryText);
+//        countryStatsContainer.appendChild(countryItem);
+//    });
+//}
+
+function showLoadingIndicator(show) {
+    document.getElementById('loadingIndicator').style.display = show ? 'block' : 'none';
+}
+
 function setupEventListeners(campaignId) {
     document.getElementById('sendButton').addEventListener('click', () => {
         sendCampaign(campaignId);
@@ -343,44 +520,69 @@ function setupEventListeners(campaignId) {
     });
 }
 
-// Render validation chart using Chart.js
-function renderValidationChart(validCount, invalidCount) {
-    const ctx = document.getElementById('validationChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: ['Valid', 'Invalid'],
-            datasets: [{
-                label: 'Numbers',
-                data: [validCount, invalidCount],
-                backgroundColor: [
-                    '#4caf50', // Green for valid
-                    '#f44336', // Red for invalid
-                ],
-                borderColor: [
-                    '#4caf50',
-                    '#f44336',
-                ],
-                borderWidth: 1
-            }]
-        },
-        options: {
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            },
-            responsive: true,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            }
-        }
-    });
-}
 
-// Send campaign request to the server
+
+
+
+//function renderCountryCodeChart(countryCodes) {
+//    const ctx = document.getElementById('countryCodeChart').getContext('2d');
+
+//    // Prepare country code data for the chart
+//    const countryLabels = Object.keys(countryCodes);
+//    const countryData = Object.values(countryCodes);
+
+//    new Chart(ctx, {
+//        type: 'bar',
+//        data: {
+//            labels: countryLabels,
+//            datasets: [{
+//                label: 'Numbers by Country Code',
+//                data: countryData,
+//                backgroundColor: '#2196f3', // Uniform blue color for all bars
+//                borderColor: '#1976d2', // Uniform darker blue color for all borders
+//                borderWidth: 1
+//            }]
+//        },
+//        options: {
+//            scales: {
+//                x: {
+//                    grid: {
+//                        display: false // Remove vertical grid lines
+//                    }
+//                },
+//                y: {
+//                    beginAtZero: true,
+//                    grid: {
+//                        display: false // Remove horizontal grid lines
+//                    }
+//                }
+//            },
+//            responsive: true,
+//            plugins: {
+//                legend: {
+//                    display: false
+//                },
+//                annotation: {
+//                    annotations: countryLabels.map((countryCode, index) => ({
+//                        type: 'label',
+//                        drawTime: 'afterDatasetsDraw',
+//                        content: function (context) {
+//                            const img = new Image();
+//                            img.src = countryFlagUrls[countryCode];
+//                            return img;
+//                        },
+//                        xValue: index,
+//                        yValue: countryData[index] * 0.1, // Adjust this value to move the flag up
+//                        width: 20,
+//                        height: 12,
+//                        position: 'outside'
+//                    }))
+//                }
+//            }
+//        }
+//    });
+//}
+
 async function sendCampaign(campaignId) {
     const apiSendCampaign = process.env.API_SendCampaign;
     const sendButton = document.getElementById('sendButton');
@@ -425,8 +627,6 @@ async function sendCampaign(campaignId) {
         }
     }
 }
-
-// Fetch data with authentication
 async function fetchWithAuth(url, options, retry = true) {
     const accessToken = localStorage.getItem('accessToken');
     const TenantKey = process.env.Key_Tenant;
@@ -451,8 +651,6 @@ async function fetchWithAuth(url, options, retry = true) {
         throw error;
     }
 }
-
-// Refresh authentication token
 async function refreshToken() {
     const refreshToken = localStorage.getItem('refreshToken');
     const accessToken = localStorage.getItem('accessToken');
@@ -483,14 +681,6 @@ async function refreshToken() {
         throw error;
     }
 }
-
-// Show or hide the loading indicator
-function showLoadingIndicator(show) {
-    const loadingIndicator = document.getElementById('loadingIndicator');
-    loadingIndicator.style.display = show ? 'block' : 'none';
-}
-
-// Show a notification message
 function showNotification(message, type) {
     const notification = document.getElementById('notification');
     if (notification) {

@@ -9,7 +9,6 @@ const fixedOrder = [
     "Mobile Number", "LongUrl", "Title", "FirstName", "LastName",
     "Country", "Email", "Address", "City", "Gender"
 ];
-
 const placeholderMap = {
     "title": "Title",
     "firstname": "FirstName",
@@ -392,7 +391,6 @@ function toggleGroupDropdown() {
     // Toggle group dropdown
     groupDropdownContent.classList.toggle("show");
 }
-
 function updateExcel() {
     Excel.run(function (context) {
         const sheet = context.workbook.worksheets.getActiveWorksheet();
@@ -501,7 +499,6 @@ async function fetchWithAuth(url, options, retry = true) {
         throw error;
     }
 }
-
 
 
 //URL and Balance
@@ -746,73 +743,7 @@ function extractPlaceholders(message) {
 
 
 
-
 //Campaign
-function validateAndFillMobileNumbers() {
-    Excel.run(async (context) => {
-        const sheet = context.workbook.worksheets.getActiveWorksheet();
-        const usedRange = sheet.getUsedRange();
-        usedRange.load('values, columnCount');
-
-        await context.sync();
-
-        const phoneNumberColumnIndex = usedRange.values[0].indexOf('Mobile Number');
-        const validColumnIndex = usedRange.values[0].indexOf('Valid');
-        const codeColumnIndex = usedRange.values[0].indexOf('Code');
-
-        if (phoneNumberColumnIndex === -1) {
-            console.error('Mobile Number column not found');
-            return;
-        }
-
-        for (let rowIndex = 1; rowIndex < usedRange.values.length; rowIndex++) {
-            let phoneNumber = usedRange.values[rowIndex][phoneNumberColumnIndex];
-
-            // Convert to string and trim spaces
-            if (phoneNumber !== null && phoneNumber !== undefined) {
-                phoneNumber = String(phoneNumber).trim();
-
-                // Add '+' sign if it's not already present
-                if (!phoneNumber.startsWith('+')) {
-                    phoneNumber = '+' + phoneNumber;
-                }
-
-                console.log(`Processing row ${rowIndex + 1}: ${phoneNumber}`);
-                const parsedNumber = libphonenumber.parsePhoneNumberFromString(phoneNumber);
-
-                if (parsedNumber) {
-                    console.log(`Parsed number: ${parsedNumber.number}, isValid: ${parsedNumber.isValid()}`);
-                } else {
-                    console.log('Parsed number is null');
-                }
-
-                if (parsedNumber && parsedNumber.isValid()) {
-                    const country = parsedNumber.country;
-                    sheet.getCell(rowIndex, validColumnIndex).values = [["Valid"]];
-                    sheet.getCell(rowIndex, codeColumnIndex).values = [[country]];
-                    // Set valid background color
-                    sheet.getRangeByIndexes(rowIndex, validColumnIndex, 1, 1).format.fill.color = '#4caf50'; // Green
-                } else {
-                    sheet.getCell(rowIndex, validColumnIndex).values = [["Invalid"]];
-                    sheet.getCell(rowIndex, codeColumnIndex).values = [[""]];
-                    // Set invalid background color
-                    sheet.getRangeByIndexes(rowIndex, validColumnIndex, 1, 1).format.fill.color = '#f44336'; // Red
-                }
-            } else {
-                console.log(`Row ${rowIndex + 1} contains an invalid value`);
-                sheet.getCell(rowIndex, validColumnIndex).values = [["Invalid"]];
-                sheet.getCell(rowIndex, codeColumnIndex).values = [[""]];
-                // Set invalid background color
-                sheet.getRangeByIndexes(rowIndex, validColumnIndex, 1, 1).format.fill.color = '#f44336'; // Red
-            }
-        }
-
-        await context.sync();
-        console.log('Mobile numbers validated and code filled successfully');
-    }).catch((error) => {
-        console.error('Error validating mobile numbers:', error);
-    });
-}
 async function downloadExcelFile(data) {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Sheet1");
@@ -849,12 +780,43 @@ async function downloadExcelFile(data) {
     document.body.removeChild(anchor);
     window.URL.revokeObjectURL(url);
 }
+const loadingIndicator = document.getElementById('loadingIndicator');
+function showLoading() {
+    loadingIndicator.style.display = 'block';
+}
+function hideLoading() {
+    loadingIndicator.style.display = 'none';
+}
 function handleValidationError() {
     isCampaignLaunching = false;
+    hideLoading();
+}
+function handleValidationSuccess(response, campaignName) {
+    hideLoading();
+    const data = response.data;
+
+    var validationData = {
+        campaignName: campaignName,
+        campaignId: data.campaignId,
+        validUrl: data.validUrl || '', // Handle null values
+        inValidUrl: data.inValidUrl || '', // Handle null values
+        totalValidCount: data.totalValidCount || 0, // Handle null values
+        totalInValidCount: data.totalInValidCount || 0, // Handle null values
+        totalCost: data.totalValidRate || 0, // Handle null values
+        reason: data.reason || ''
+    };
+    console.log(validationData);
+    if (validationData.reason === "do not have enough balance") {
+        showNotification("You do not have enough balance.");
+        return; // Prevent navigation to the next HTML page
+    }
+
+    localStorage.setItem('validationData', JSON.stringify(validationData));
+    saveFormData();
+    window.location.href = 'SendCampaign.html';
 }
 async function validateCampaignNormally(campaignName, campaignContent, senderId, phoneNumbers, hasShortUrl, longUrl) {
-
-    validateAndFillMobileNumbers();
+    showLoading(); // Show loading indicator
     const apiValidate = process.env.API_Validate;
     const placeholders = extractPlaceholders(campaignContent);
 
@@ -887,14 +849,16 @@ async function validateCampaignNormally(campaignName, campaignContent, senderId,
         }
 
         const data = await response.json();
-        console.log('Campaign validated successfully:', data);
         return data;
     } catch (error) {
         console.error('Error validating campaign:', error);
         throw error;
+    } finally {
+        hideLoading(); // Hide loading indicator when the operation is complete
     }
 }
 async function validateCampaignWithFile(campaignName, campaignContent, senderId, hasShortUrl, longUrl) {
+    showLoading(); // Show loading indicator
     const apiValidateFile = process.env.API_Validate_File;
     const tenantKey = process.env.Key_Tenant;
     const SMSCHannel = process.env.SMS_Channel;
@@ -954,14 +918,13 @@ async function validateCampaignWithFile(campaignName, campaignContent, senderId,
             }
 
             const data = await response.json();
-            console.log('Campaign validated with file successfully:', data);
-
             handleValidationSuccess(data, campaignName);
-            /*await downloadExcelFile(usedRange.values);*/
         });
     } catch (error) {
         console.error("Error validating campaign with file: ", error);
         showNotification('Error validating campaign. Please try again.', "Error");
+    } finally {
+        hideLoading(); // Hide loading indicator when the operation is complete
     }
 }
 function launchCampaign() {
@@ -970,6 +933,7 @@ function launchCampaign() {
         return;
     }
     isCampaignLaunching = true;
+    showLoading(); // Show loading indicator
     localStorage.removeItem('formData');
     const campaignName = document.getElementById('campaignName').value;
     const sender = document.getElementById('sender').value;
@@ -980,6 +944,7 @@ function launchCampaign() {
         if (!campaignName || !sender || !message || phoneNumbers.length <= 1) {
             showNotification('Please enter all mandatory fields: campaign name, sender, mobile number, and message.', "Error");
             isCampaignLaunching = false;
+            hideLoading(); // Hide loading indicator
             return;
         }
 
@@ -990,8 +955,6 @@ function launchCampaign() {
             hasShortUrl = true;
             longUrl = longUrlInput;
             getShortUrl(longUrlInput).then(shortUrl => {
-
-
                 handleColumnType().then(isVariable => {
                     if (isVariable) {
                         validateCampaignWithFile(campaignName, message, sender, hasShortUrl, longUrl).then(data => {
@@ -1000,7 +963,6 @@ function launchCampaign() {
                             handleValidationError();
                         });
                     } else {
-
                         validateCampaignNormally(campaignName, message, sender, phoneNumbers, hasShortUrl, longUrl).then(data => {
                             handleValidationSuccess(data, campaignName);
                         }).catch(error => {
@@ -1011,11 +973,13 @@ function launchCampaign() {
                     console.error('Error checking column type:', error);
                     showNotification('Error checking column type. Please try again.', "Error");
                     isCampaignLaunching = false;
+                    hideLoading(); // Hide loading indicator
                 });
             }).catch(error => {
                 console.error('Error getting short URL:', error);
                 showNotification('Error getting short URL. Please try again.', "Error");
                 isCampaignLaunching = false;
+                hideLoading(); // Hide loading indicator
             });
         } else {
             handleColumnType().then(isVariable => {
@@ -1036,18 +1000,247 @@ function launchCampaign() {
                 console.error('Error checking column type:', error);
                 showNotification('Error checking column type. Please try again.', "Error");
                 isCampaignLaunching = false;
+                hideLoading(); // Hide loading indicator
             });
         }
     }).catch(error => {
         console.error('Error collecting phone numbers:', error);
         showNotification('Error collecting phone numbers. Please try again.', "Error");
         isCampaignLaunching = false;
+        hideLoading(); // Hide loading indicator
     });
 }
 
 
 
-//Functions
+//function handleValidationError() {
+//    isCampaignLaunching = false;
+//}
+//function handleValidationSuccess(response, campaignName) {
+//    const loadingIndicator = document.getElementById('loadingIndicator');
+//    loadingIndicator.style.display = 'block';
+//    const data = response.data;
+
+//    var validationData = {
+//        campaignName: campaignName,
+//        campaignId: data.campaignId,
+//        validUrl: data.validUrl || '', // Handle null values
+//        inValidUrl: data.inValidUrl || '', // Handle null values
+//        totalValidCount: data.totalValidCount || 0, // Handle null values
+//        totalInValidCount: data.totalInValidCount || 0, // Handle null values
+//        totalCost: data.totalValidRate || 0, // Handle null values
+//        reason: data.reason || ''
+//    };
+
+//    if (validationData.reason === "do not have enough balance") {
+//        showNotification("You do not have enough balance.");
+//        loadingIndicator.style.display = 'none';
+//        return; // Prevent navigation to the next HTML page
+//    }
+
+//    localStorage.setItem('validationData', JSON.stringify(validationData));
+//    saveFormData();
+//    window.location.href = 'SendCampaign.html';
+//}
+
+//async function validateCampaignNormally(campaignName, campaignContent, senderId, phoneNumbers, hasShortUrl, longUrl) {
+
+ 
+//    const apiValidate = process.env.API_Validate;
+//    const placeholders = extractPlaceholders(campaignContent);
+
+//    const requestBody = {
+//        Campaign: {
+//            ChannelId: process.env.SMS_Channel,
+//            Name: campaignName,
+//            Content: campaignContent,
+//            SenderId: senderId,
+//            HasShortUrl: hasShortUrl,
+//            LongUrl: longUrl,
+//            ClientAccountId: localStorage.getItem('clientId'),
+//            Variables: placeholders,
+//            HasBlacklistShortUrl: false
+//        },
+//        PhoneNumbers: phoneNumbers.map(String)
+//    };
+
+//    try {
+//        const response = await fetchWithAuth(apiValidate, {
+//            method: 'POST',
+//            headers: {
+//                'Content-Type': 'application/json'
+//            },
+//            body: JSON.stringify(requestBody)
+//        });
+
+//        if (!response.ok) {
+//            throw new Error(`Network response was not ok: ${response.statusText}`);
+//        }
+
+//        const data = await response.json();
+    
+//        return data;
+//    } catch (error) {
+//        console.error('Error validating campaign:', error);
+//        throw error;
+//    }
+//}
+//async function validateCampaignWithFile(campaignName, campaignContent, senderId, hasShortUrl, longUrl) {
+//    const apiValidateFile = process.env.API_Validate_File;
+//    const tenantKey = process.env.Key_Tenant;
+//    const SMSCHannel = process.env.SMS_Channel;
+//    const placeholders = extractPlaceholders(campaignContent);
+
+//    try {
+//        await Excel.run(async (context) => {
+//            const workbook = context.workbook;
+//            const worksheet = workbook.worksheets.getActiveWorksheet();
+
+//            const usedRange = worksheet.getUsedRange();
+//            usedRange.load("values");
+
+//            await context.sync();
+
+//            const workbookBlob = await getWorkbookBlob(usedRange.values);
+
+//            const formData = new FormData();
+//            formData.append('file', workbookBlob, "SampleDestinationsWithVariablesAndLongUrl.xlsx");
+//            formData.append('countryCode', '');
+//            formData.append('Campaign', JSON.stringify({
+//                channelId: SMSCHannel,
+//                Name: campaignName,
+//                Content: campaignContent,
+//                SenderId: senderId,
+//                HasShortUrl: hasShortUrl,
+//                LongUrl: longUrl,
+//                ClientAccountId: localStorage.getItem('clientId'),
+//                Variables: placeholders,
+//                HasBlacklistShortUrl: false
+//            }));
+//            formData.append('LongUrlFromFile', "false");
+
+//            const response = await fetchWithAuth(apiValidateFile, {
+//                method: 'POST',
+//                headers: {
+//                    'Accept': 'application/json, text/plain, */*',
+//                    'Accept-Language': 'en-US,en;q=0.9,ar;q=0.8',
+//                    'Cache-Control': 'no-cache',
+//                    'Connection': 'keep-alive',
+//                    'Origin': 'https://app.montymobile.com',
+//                    'Pragma': 'no-cache',
+//                    'Referer': 'https://app.montymobile.com/',
+//                    'Sec-Fetch-Dest': 'empty',
+//                    'Sec-Fetch-Mode': 'cors',
+//                    'Sec-Fetch-Site': 'same-site',
+//                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+//                    'sec-ch-ua': '"Google Chrome";v="125", "Chromium";v="125", "Not.A/Brand";v="24"',
+//                    'sec-ch-ua-mobile': '?0',
+//                    'sec-ch-ua-platform': '"Windows"',
+//                },
+//                body: formData
+//            });
+
+//            if (!response.ok) {
+//                throw new Error(`Network response was not ok: ${response.statusText}`);
+//            }
+
+//            const data = await response.json();
+
+
+//            handleValidationSuccess(data, campaignName);
+
+//        });
+//    } catch (error) {
+//        console.error("Error validating campaign with file: ", error);
+//        showNotification('Error validating campaign. Please try again.', "Error");
+//    }
+//}
+//function launchCampaign() {
+
+
+//    if (isCampaignLaunching) {
+//        showNotification('Campaign launch already in progress...', "Valid");
+      
+      
+//        return;
+//    }
+//    isCampaignLaunching = true;
+//    localStorage.removeItem('formData');
+//    const campaignName = document.getElementById('campaignName').value;
+//    const sender = document.getElementById('sender').value;
+//    let message = document.getElementById('message').value;
+//    const longUrlInput = document.getElementById('longUrl').value;
+
+//    getNonEmptyMobileNumbers().then(phoneNumbers => {
+//        if (!campaignName || !sender || !message || phoneNumbers.length <= 1) {
+//            showNotification('Please enter all mandatory fields: campaign name, sender, mobile number, and message.', "Error");
+//            isCampaignLaunching = false;
+//            return;
+//        }
+
+//        let hasShortUrl = false;
+//        let longUrl = null;
+
+//        if (longUrlInput) {
+//            hasShortUrl = true;
+//            longUrl = longUrlInput;
+//            getShortUrl(longUrlInput).then(shortUrl => {
+
+
+//                handleColumnType().then(isVariable => {
+//                    if (isVariable) {
+//                        validateCampaignWithFile(campaignName, message, sender, hasShortUrl, longUrl).then(data => {
+//                            handleValidationSuccess(data, campaignName);
+                          
+//                        }).catch(error => {
+//                            handleValidationError();
+//                        });
+//                    } else {
+
+//                        validateCampaignNormally(campaignName, message, sender, phoneNumbers, hasShortUrl, longUrl).then(data => {
+//                            handleValidationSuccess(data, campaignName);
+//                        }).catch(error => {
+//                            handleValidationError();
+//                        });
+//                    }
+//                }).catch(error => {
+//                    console.error('Error checking column type:', error);
+//                    showNotification('Error checking column type. Please try again.', "Error");
+//                    isCampaignLaunching = false;
+//                });
+//            }).catch(error => {
+//                console.error('Error getting short URL:', error);
+//                showNotification('Error getting short URL. Please try again.', "Error");
+//                isCampaignLaunching = false;
+//            });
+//        } else {
+//            handleColumnType().then(isVariable => {
+//                if (isVariable) {
+//                    validateCampaignWithFile(campaignName, message, sender, hasShortUrl, longUrl).then(data => {
+//                        handleValidationSuccess(data, campaignName);
+//                    }).catch(error => {
+//                        handleValidationError();
+//                    });
+//                } else {
+//                    validateCampaignNormally(campaignName, message, sender, phoneNumbers, hasShortUrl, longUrl).then(data => {
+//                        handleValidationSuccess(data, campaignName);
+//                    }).catch(error => {
+//                        handleValidationError();
+//                    });
+//                }
+//            }).catch(error => {
+//                console.error('Error checking column type:', error);
+//                showNotification('Error checking column type. Please try again.', "Error");
+//                isCampaignLaunching = false;
+//            });
+//        }
+//    }).catch(error => {
+//        console.error('Error collecting phone numbers:', error);
+//        showNotification('Error collecting phone numbers. Please try again.', "Error");
+//        isCampaignLaunching = false;
+//    });
+//}
+
 function saveFormData() {
     const formData = {
         campaignName: document.getElementById('campaignName').value,
@@ -1077,7 +1270,6 @@ function saveFormData() {
         console.error('Error saving Excel data:', error);
     });
 }
-
 function restoreFormData() {
     const formData = JSON.parse(localStorage.getItem('formData'));
     if (formData) {
@@ -1088,7 +1280,12 @@ function restoreFormData() {
 
         // Restore template selection
         if (formData.templateId) {
+  
             document.getElementById('template').value = formData.templateId;
+            document.getElementById('shortenUrlButton').style.display = 'none';
+            document.getElementById('message').readOnly = true;
+            document.getElementById('dropdownButton').style.display = 'none';
+
         }
 
         // Restore selected groups and their contacts
@@ -1138,81 +1335,6 @@ function restoreFormData() {
     }
 }
 
-
-//function saveFormData() {
-//    const formData = {
-//        campaignName: document.getElementById('campaignName').value,
-//        sender: document.getElementById('sender').value,
-//        message: document.getElementById('message').value,
-//        selectedGroups: Array.from(document.querySelectorAll('#groupDropdownContent input[type=checkbox]:checked')).map(checkbox => checkbox.value),
-//        templateId: document.getElementById('template').value,
-//        type: document.getElementById('columnTypeDropdown').value
-//    };
-//    localStorage.setItem('formData', JSON.stringify(formData));
-
-//    // Save Excel data
-//    Excel.run(async (context) => {
-//        const sheet = context.workbook.worksheets.getActiveWorksheet();
-//        const usedRange = sheet.getUsedRange();
-//        usedRange.load('values');
-//        await context.sync();
-
-//        const excelData = usedRange.values;
-//        localStorage.setItem('excelData', JSON.stringify(excelData));
-//    }).catch(function (error) {
-//        console.error('Error saving Excel data:', error);
-//    });
-//}
-//function restoreFormData() {
-//    const formData = JSON.parse(localStorage.getItem('formData'));
-//    if (formData) {
-//        document.getElementById('campaignName').value = formData.campaignName;
-//        document.getElementById('sender').value = formData.sender;
-//        document.getElementById('message').value = formData.message;
-//        document.getElementById('columnTypeDropdown').value = formData.type;
-
-//        // Restore template selection
-//        if (formData.templateId) {
-//            document.getElementById('template').value = formData.templateId;
-//        }
-
-//        // Restore selected groups
-//        formData.selectedGroups.forEach(group => {
-//            const checkbox = document.querySelector(`#groupDropdownContent input[value="${group}"]`);
-//            if (checkbox) {
-//                checkbox.checked = true;
-//            }
-//        });
-
-//        // Restore sender
-//        const senderSelect = document.getElementById('sender');
-//        Array.from(senderSelect.options).forEach(option => {
-//            if (option.value === formData.sender) {
-//                option.selected = true;
-//            }
-//        });
-
-//        // Handle column type restoration
-//        if (formData.type === 'Variable') {
-//            AddAllColumns();
-//        } else {
-//            AddMobileNumberColumn();
-//        }
-
-//        // Restore Excel data
-//        const excelData = JSON.parse(localStorage.getItem('excelData'));
-//        if (excelData) {
-//            Excel.run(async (context) => {
-//                const sheet = context.workbook.worksheets.getActiveWorksheet();
-//                const range = sheet.getRange(`A1:${String.fromCharCode(64 + excelData[0].length)}${excelData.length}`);
-//                range.values = excelData;
-//                await context.sync();
-//            }).catch(function (error) {
-//                console.error('Error restoring Excel data:', error);
-//            });
-//        }
-//    }
-//}
 function handleColumnType() {
 
     return new Promise((resolve) => {
@@ -1289,7 +1411,7 @@ function getNonEmptyMobileNumbers() {
                     })
                     .map(row => String(row[0]).trim());
 
-                console.log(`Collected phone numbers: ${phoneNumbers}`);
+              
                 return phoneNumbers;
             });
         });
@@ -1308,24 +1430,27 @@ function AddAllColumns() {
         usedRange.load('rowCount, columnCount');
 
         return context.sync().then(() => {
+            // Clear all rows except for the Mobile Number column
+            if (usedRange.rowCount > 1) {
+                const dataRange = sheet.getRangeByIndexes(1, 1, usedRange.rowCount - 1, usedRange.columnCount - 1);
+                dataRange.clear();
+            }
+
             fixedOrder.forEach((header, index) => {
                 const cell = sheet.getCell(0, index);
                 cell.values = [[header]];
-                cell.format.fill.color = "#0B5394"; // Dark blue color
+                cell.format.fill.color = "#ed204c"; // Set header cell color to #ed204c
                 cell.format.font.color = "#FFFFFF"; // White text color
                 cell.format.font.bold = true; // Bold text
                 cell.format.font.size = 12; // Font size
                 cell.format.horizontalAlignment = "Center"; // Center alignment
             });
 
-            // Clear remaining cells in the row
-            if (usedRange.columnCount > fixedOrder.length) {
-                const columnRange = sheet.getRangeByIndexes(0, fixedOrder.length, usedRange.rowCount, usedRange.columnCount - fixedOrder.length);
-                columnRange.clear();
-            }
-
             return context.sync().then(() => {
-                console.log('All columns added successfully');
+                // Auto fit columns
+                sheet.getUsedRange().getEntireColumn().format.autofitColumns();
+              /*  validateAndFillMobileNumbers(); // Ensure validation is called after setting headers*/
+                console.log('All columns added and fitted successfully');
             });
         });
     }).catch(function (error) {
@@ -1342,15 +1467,18 @@ function AddMobileNumberColumn() {
             return;
         }
 
-        const range = sheet.getRange("A1");
+        const headers = ["Mobile Number"];
+        headers.forEach((header, index) => {
+            const cell = sheet.getCell(0, index);
+            cell.values = [[header]];
+            cell.format.fill.color = "#ed204c"; // Set header cell color to #ed204c
+            cell.format.font.color = "#FFFFFF"; // White text color
+            cell.format.font.bold = true; // Bold text
+            cell.format.horizontalAlignment = "Center"; // Center alignment
+        });
 
-        // Set values and formatting
-        range.values = [["Mobile Number"]];
-        range.format.fill.color = "#008000"; // Green background color
-        range.format.font.color = "#FFFFFF"; // White text color
-        range.format.font.bold = true; // Bold text
-        range.format.horizontalAlignment = "Center"; // Center alignment
-        range.format.autofitColumns();
+        // Autofit the columns
+        sheet.getUsedRange().getEntireColumn().format.autofitColumns();
 
         // Clear other columns
         const usedRange = sheet.getUsedRange();
@@ -1358,11 +1486,14 @@ function AddMobileNumberColumn() {
 
         return context.sync().then(() => {
             // Check if usedRange is valid
-            if (usedRange.rowCount > 0 && usedRange.columnCount > 1) {
-                const columnRange = sheet.getRangeByIndexes(0, 1, usedRange.rowCount, usedRange.columnCount - 1);
+            if (usedRange.rowCount > 0 && usedRange.columnCount > headers.length) {
+                const columnRange = sheet.getRangeByIndexes(0, headers.length, usedRange.rowCount, usedRange.columnCount - headers.length);
                 columnRange.clear();
                 return context.sync();
             }
+        }).then(() => {
+            // Validate and fill mobile numbers
+         /*   validateAndFillMobileNumbers();*/
         });
     }).catch(function (error) {
         console.error("Error in AddMobileNumberColumn: " + error);
@@ -1377,7 +1508,6 @@ async function getWorkbookBlob(data) {
     const uint8Array = await workbook.xlsx.writeBuffer();
     return new Blob([uint8Array], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
 }
-
 window.onclick = function (event) {
     if (!event.target.matches('.dropdown-button')) {
         var dropdowns = document.getElementsByClassName("dropdown-content");

@@ -4,26 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" type="text/css" href="https://DTTTeam.github.io/MontySMS/CSS/SendCampaign.css">
+    <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://DTTTeam.github.io/MontySMS/dist/SendCampaign.bundle.js" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <script src="https://unpkg.com/libphonenumber-js/bundle/libphonenumber-max.js"></script>
+    <script src="../dist/sendCampaign.bundle.js" defer></script>
 </head>
 <body>
     <div class="container">
         <div class="title-container">
-            <!--<h1 class="colorfulTitle">
-                <span>S</span><span>e</span><span>n</span><span>d</span> <span>C</span><span>a</span><span>m</span><span>p</span><span>a</span><span>i</span><span>g</span><span>n</span>
-            </h1>-->
+        
         </div>
-
         <div id="statsContainer">
-            <div id="campaignName" class="stat-item campaign-name">Campaign: <span></span></div>
-            <div id="totalCost" class="stat-item total-cost">Total Cost: <span></span></div>
-            <div id="invalidUrl" class="stat-item invalid-url">Invalid URL: <a href="" target="_blank">Click here</a></div>
-            <div id="totalValidCount" class="stat-item valid-numbers">Valid Numbers: <span></span></div>
-            <div id="totalInValidCount" class="stat-item invalid-numbers">Invalid Numbers: <span></span></div>
-            <canvas id="validationChart"></canvas>
-            <canvas id="countryCodeChart"></canvas>
+            <div id="campaignName" class="stat-item campaign-name"> <span></span></div>
+            <div id="validationStats" class="stat-item">
+                <div class="stat-item-row">
+                    <div id="totalCost" class="stat-item rectangle">Cost: <span></span></div>
+                    <div id="totalValidCount" class="stat-item rectangle">Valid:<span></span></div>
+                    <div id="totalInValidCount" class="stat-item rectangle">Invalid:<span></span></div>
+                </div>
+                <div id="invalidUrl" class="stat-item rectangle invalid-url">Invalid URL: <a href="" target="_blank">Click here</a></div>
+            </div>
+            <div class="chart-container">
+                <canvas id="validationChart"></canvas>
+                <div class="chart-legend"></div>
+            </div>
+            <div id="countryStats" class="stat-item country-stats"></div>
         </div>
         <div class="button-group">
             <button id="sendButton" class="btn">Send SMS</button>
