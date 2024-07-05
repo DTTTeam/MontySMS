@@ -1,4 +1,8 @@
-﻿/* Statistics Page CSS */
+﻿/* General Styles */
+* {
+    box-sizing: border-box;
+}
+
 body {
     background-color: #f0f2f5;
     font-family: 'Roboto', sans-serif;
@@ -9,6 +13,7 @@ body {
     margin: 0;
 }
 
+/* Container */
 .container {
     width: 750px;
     height: 724px;
@@ -20,26 +25,30 @@ body {
     overflow-y: auto;
 }
 
+/* Title */
 .title-container {
     margin-bottom: 20px;
 }
 
+/* Stats Container */
 #statsContainer {
     margin-top: 20px;
 }
 
+/* Campaign Name */
 .campaign-name {
     font-size: 1.5em;
     font-weight: bold;
-    background-color: #4caf50; /* Updated color */
+    background-color: #ed204c;
     color: #fff;
     padding: 15px;
     border-radius: 10px;
     margin-bottom: 20px;
-    text-align: center; /* Centered text */
+    text-align: center;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+/* Stat Items */
 .stat-item-row {
     display: flex;
     justify-content: space-between;
@@ -48,39 +57,35 @@ body {
 }
 
 .rectangle {
-    background-color: #2196f3; /* Updated color */
+    background-color: #ed204c;
     color: #fff;
     padding: 10px;
     border-radius: 10px;
     width: 30%;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-right: 10px;
 }
 
-.total-cost {
-    background-color: #42a5f5; /* Different color for Total Cost */
-}
+    .rectangle span {
+        display: block;
+        font-size: 1.2em;
+        font-weight: bold;
+        margin-top: 5px;
+    }
 
-.valid-numbers {
-    background-color: #66bb6a; /* Different color for Valid Numbers */
-}
-
-.invalid-numbers {
-    background-color: #ef5350; /* Different color for Invalid Numbers */
-}
-
-.rectangle span {
-    display: block;
-    font-size: 1.2em;
-    font-weight: bold;
-    margin-top: 5px;
-}
-
+/* Chart Container */
 .chart-container {
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     margin-top: 20px;
+}
+
+#validationChart {
+    width: 200px; /* Adjusted chart width */
+    height: 200px; /* Adjusted chart height */
+    margin: 20px auto; /* Centered chart */
 }
 
 .chart-legend {
@@ -99,12 +104,7 @@ body {
             margin-left: 5px;
         }
 
-#validationChart {
-    width: 150px; /* Adjusted chart width */
-    height: 150px; /* Adjusted chart height */
-    margin: 20px auto; /* Centered chart */
-}
-
+/* Country Stats */
 .country-stats {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
@@ -115,27 +115,35 @@ body {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-    .country-stats .country-item {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 10px;
-        border-radius: 5px;
-        background-color: #fff;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        font-size: 0.9em;
+.country-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    border-radius: 5px;
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    font-size: 0.9em;
+}
+
+    .country-item img {
+        width: 30px;
+        height: 20px;
+        margin-bottom: 5px;
     }
 
-        .country-stats .country-item img {
-            width: 20px;
-            height: 12px;
-            margin-right: 5px;
-        }
+    .country-item .country-code {
+        font-size: 0.9em;
+        margin-bottom: 3px;
+    }
 
-        .country-stats .country-item span {
-            font-size: 0.9em;
-        }
+    .country-item .bold-number {
+        font-weight: bold;
+        font-size: 1em;
+    }
 
+/* Buttons */
 .back-button, .btn {
     padding: 10px 20px;
     border: none;
@@ -152,10 +160,12 @@ body {
         background-color: #c00c3c;
     }
 
+/* Loading Indicator */
 #loadingIndicator {
     margin: 10px 0;
 }
 
+/* Notification */
 .notification {
     display: none;
     position: fixed;
