@@ -204,11 +204,9 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 });
 function initializeAddIn() {
-    console.log("Initializing Add-In");
 
     const validationData = JSON.parse(localStorage.getItem('validationData'));
-    console.log('Validation Data:', validationData);
-
+ 
     if (validationData) {
         displayValidationInfo(validationData);
         setupEventListeners(validationData.campaignId);
@@ -222,7 +220,6 @@ function initializeAddIn() {
     readMobileNumbersFromExcel();
     createChartLegend();
 }
-
 function displayValidationInfo(validationData) {
     console.log("Displaying validation info.");
 
@@ -268,7 +265,6 @@ function displayValidationInfo(validationData) {
     // Render the validation chart as a pie chart
     renderValidationChart(validationData.totalValidCount, validationData.totalInValidCount);
 }
-
 function renderValidationChart(validCount, invalidCount) {
     const ctx = document.getElementById('validationChart').getContext('2d');
     new Chart(ctx, {
@@ -314,8 +310,6 @@ function renderValidationChart(validCount, invalidCount) {
 
     createChartLegend();
 }
-
-// Create legend manually
 function createChartLegend() {
     const legendContainer = document.querySelector('.chart-legend');
     legendContainer.innerHTML = ''; // Clear previous legend
@@ -329,11 +323,6 @@ function createChartLegend() {
     legendContainer.appendChild(validLegend);
     legendContainer.appendChild(invalidLegend);
 }
-
-// Call this function after rendering the chart
-
-
-
 function renderCountryStats(countryCodes) {
     const countryStatsContainer = document.getElementById('countryStats');
     countryStatsContainer.innerHTML = '';
@@ -351,27 +340,18 @@ function renderCountryStats(countryCodes) {
             const flagImg = document.createElement('img');
             flagImg.src = flagUrl;
             flagImg.alt = `${countryCode} flag`;
-
             countryItem.appendChild(flagImg);
-        } else {
-            
         }
 
         const countryText = document.createElement('span');
-        countryText.textContent = `${countryCode}: ${count}`;
+        countryText.innerHTML = `${countryCode}: <span class="bold-number">${count}</span>`;
 
         countryItem.appendChild(countryText);
         countryStatsContainer.appendChild(countryItem);
     });
 }
-
-
-
-
-
 function readMobileNumbersFromExcel() {
-  
-    Excel.run(function (context) {
+    return Excel.run(function (context) {
         const sheet = context.workbook.worksheets.getActiveWorksheet();
         const usedRange = sheet.getUsedRange();
         usedRange.load("rowCount");
@@ -382,10 +362,10 @@ function readMobileNumbersFromExcel() {
 
             return context.sync().then(function () {
                 const mobileNumbers = range.values.flat();
-               
-                const countryCodes = extractCountryCodes(mobileNumbers);
-           ;
+                const { countryCodes, flaggedNumbers } = extractCountryCodes(mobileNumbers);
+
                 renderCountryStats(countryCodes);
+                console.log("Flagged Numbers:", flaggedNumbers);
 
                 // Hide loading indicator after data is processed
                 showLoadingIndicator(false);
@@ -397,120 +377,47 @@ function readMobileNumbersFromExcel() {
         showLoadingIndicator(false);
     });
 }
-
 function extractCountryCodes(mobileNumbers) {
     const countryCodes = {};
+    const flaggedNumbers = [];
+
     mobileNumbers.forEach(number => {
+        let parsedNumber;
         try {
-   
-            const parsedNumber = libphonenumber.parsePhoneNumberFromString(String(number), 'LB'); // Specify default region 'LB'
-          
+            if (!String(number).startsWith("00")) {
+                // Prepend '00' if the number does not start with it
+                number = "00" + number;
+            }
+
+            parsedNumber = libphonenumber.parsePhoneNumberFromString(String(number), 'LB'); // Specify default region 'LB'
+
             if (parsedNumber) {
                 const countryCode = parsedNumber.country;
                 const countryCallingCode = parsedNumber.countryCallingCode;
- 
+
                 if (countryCode) {
                     if (countryCode in countryCodes) {
                         countryCodes[countryCode]++;
                     } else {
                         countryCodes[countryCode] = 1;
                     }
-                } else {
-                    
                 }
+            } else {
+                // Flag the number if it still can't be parsed
+                flaggedNumbers.push(number);
             }
         } catch (e) {
             console.error('Error parsing number:', number, e);
+            // Flag the number if an error occurs during parsing
+            flaggedNumbers.push(number);
         }
     });
-    return countryCodes;
+
+    return { countryCodes, flaggedNumbers };
 }
-
-//function renderValidationChart(validCount, invalidCount) {
-//    const ctx = document.getElementById('validationChart').getContext('2d');
-//    new Chart(ctx, {
-//        type: 'bar',
-//        data: {
-//            labels: ['Valid', 'Invalid'],
-//            datasets: [{
-//                label: 'Numbers',
-//                data: [validCount, invalidCount],
-//                backgroundColor: [
-//                    '#4caf50', // Green for valid
-//                    '#f44336', // Red for invalid
-//                ],
-//                borderColor: [
-//                    '#4caf50',
-//                    '#f44336',
-//                ],
-//                borderWidth: 1,
-//                barPercentage: 0.5, // Adjust this value to control the bar width
-//                categoryPercentage: 0.5 // Adjust this value to control the bar width
-//            }]
-//        },
-//        options: {
-//            scales: {
-//                x: {
-//                    grid: {
-//                        display: false // Remove vertical grid lines
-//                    },
-//                    ticks: {
-//                        padding: 10 // Adjust this value for label padding
-//                    }
-//                },
-//                y: {
-//                    beginAtZero: true,
-//                    grid: {
-//                        display: false // Remove horizontal grid lines
-//                    }
-//                }
-//            },
-//            responsive: true,
-//            plugins: {
-//                legend: {
-//                    display: false
-//                }
-//            }
-//        }
-//    });
-//}
-
-//function renderCountryStats(countryCodes) {
-//    const countryStatsContainer = document.getElementById('countryStats');
-//    countryStatsContainer.innerHTML = '';
-
-//    // Sort country codes by count (descending order)
-//    const sortedCountryCodes = Object.keys(countryCodes).sort((a, b) => countryCodes[b] - countryCodes[a]);
-
-//    sortedCountryCodes.forEach(countryCode => {
-//        const flagUrl = countryFlagUrls[countryCode];
-//        const count = countryCodes[countryCode];
-
-//        const countryItem = document.createElement('div');
-//        countryItem.className = 'country-item';
-
-//        if (flagUrl) {
-//            const flagImg = document.createElement('img');
-//            flagImg.src = flagUrl;
-//            flagImg.alt = `${countryCode} flag`;
-
-//            countryItem.appendChild(flagImg);
-//        } else {
-//            console.error(`No flag URL found for country code ${countryCode}`);
-//        }
-
-//        const countryText = document.createElement('span');
-//        countryText.textContent = `${countryCode}: ${count}`;
-
-//        countryItem.appendChild(countryText);
-//        countryStatsContainer.appendChild(countryItem);
-//    });
-//}
-
 function showLoadingIndicator(show) {
     document.getElementById('loadingIndicator').style.display = show ? 'block' : 'none';
 }
-
 function setupEventListeners(campaignId) {
     document.getElementById('sendButton').addEventListener('click', () => {
         sendCampaign(campaignId);
@@ -521,69 +428,6 @@ function setupEventListeners(campaignId) {
         window.location.href = 'SMSCampaign.html';
     });
 }
-
-
-
-
-
-//function renderCountryCodeChart(countryCodes) {
-//    const ctx = document.getElementById('countryCodeChart').getContext('2d');
-
-//    // Prepare country code data for the chart
-//    const countryLabels = Object.keys(countryCodes);
-//    const countryData = Object.values(countryCodes);
-
-//    new Chart(ctx, {
-//        type: 'bar',
-//        data: {
-//            labels: countryLabels,
-//            datasets: [{
-//                label: 'Numbers by Country Code',
-//                data: countryData,
-//                backgroundColor: '#2196f3', // Uniform blue color for all bars
-//                borderColor: '#1976d2', // Uniform darker blue color for all borders
-//                borderWidth: 1
-//            }]
-//        },
-//        options: {
-//            scales: {
-//                x: {
-//                    grid: {
-//                        display: false // Remove vertical grid lines
-//                    }
-//                },
-//                y: {
-//                    beginAtZero: true,
-//                    grid: {
-//                        display: false // Remove horizontal grid lines
-//                    }
-//                }
-//            },
-//            responsive: true,
-//            plugins: {
-//                legend: {
-//                    display: false
-//                },
-//                annotation: {
-//                    annotations: countryLabels.map((countryCode, index) => ({
-//                        type: 'label',
-//                        drawTime: 'afterDatasetsDraw',
-//                        content: function (context) {
-//                            const img = new Image();
-//                            img.src = countryFlagUrls[countryCode];
-//                            return img;
-//                        },
-//                        xValue: index,
-//                        yValue: countryData[index] * 0.1, // Adjust this value to move the flag up
-//                        width: 20,
-//                        height: 12,
-//                        position: 'outside'
-//                    }))
-//                }
-//            }
-//        }
-//    });
-//}
 
 async function sendCampaign(campaignId) {
     const apiSendCampaign = process.env.API_SendCampaign;

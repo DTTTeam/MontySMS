@@ -31,8 +31,9 @@ document.addEventListener("DOMContentLoaded", function () {
             setupEventListeners();
             const container = document.querySelector('.campaign-container');
             if (container) {
-             
                 container.style.backgroundColor = '#fff'; // Ensure background is white
+                container.style.width = '100%'; // Ensure it takes full width of the task pane
+                container.style.height = '100%'; // Ensure it takes full height of the task pane
             }
             fetchData().then(() => {
                 const backNavigation = localStorage.getItem('backNavigation');
@@ -43,12 +44,15 @@ document.addEventListener("DOMContentLoaded", function () {
                 } else {
                     localStorage.removeItem('formData');
                 }
+                hideLoading();
             });
         } else {
             console.error("This script only runs in Excel.");
         }
     });
 });
+;
+
 function setupEventListeners() {
     const templateDropdown = document.getElementById('template');
     templateDropdown.addEventListener('change', handleTemplateChange);
@@ -134,6 +138,7 @@ function setupEventListeners() {
         fetchTemplates();
         fetchBalance();
         fetchContacts();
+        fetchClient();
         document.body.dataset.fetchDataCalled = true;
     }
 
@@ -175,6 +180,7 @@ async function fetchData() {
     await fetchGroups();
     await fetchTemplates();
     await fetchBalance();
+    await fetchClient();
 }
 
 // Group and contact function
@@ -437,8 +443,55 @@ function updateExcel() {
         console.log("Error updating Excel:", error);
     });
 }
-//End 
+//End
 
+
+//Client Info
+function fetchClient() {
+    return new Promise((resolve, reject) => {
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        loadingIndicator.style.display = 'block';
+        var clientid = localStorage.getItem('clientId');
+        const apiGetClient = `${process.env.API_GetClient}${clientid}`;
+
+        fetchWithAuth(apiGetClient, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(response => {
+                console.log(`Response status: ${response.status}`);
+                if (!response.ok) {
+                    throw new Error(`Network response was not ok: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Response data:', data);
+                if (data && data.data && data.data.client) {
+                    const client = data.data.client;
+                    const fullName = `${client.firstName} ${client.lastName}`;
+                    const userName = client.username;
+
+                    document.getElementById('clientName').innerHTML = `<i class="fas fa-user"></i> ${fullName}`;
+           /*         document.getElementById('clientUsername').innerHTML = `<i class="fas fa-envelope"></i> ${userName}`;*/
+
+                    resolve(client);
+                } else {
+                    console.error('Unexpected response format:', data);
+                    reject('Unexpected response format');
+                }
+            })
+            .catch(error => {
+                console.error(`Error fetching client with ID ${clientid}:`, error);
+                reject(error);
+            })
+            .finally(() => {
+                loadingIndicator.style.display = 'none';
+            });
+    });
+}
 
 
 
@@ -827,6 +880,7 @@ async function validateCampaignNormally(campaignName, campaignContent, senderId,
             Content: campaignContent,
             SenderId: senderId,
             HasShortUrl: hasShortUrl,
+            serviceTag: "ONE_WAY_SMS",
             LongUrl: longUrl,
             ClientAccountId: localStorage.getItem('clientId'),
             Variables: placeholders,
@@ -1392,7 +1446,36 @@ function updateMessageCounter() {
 
     messageCounter.innerHTML = `${charCount}/${charLimit} characters | ${charsLeft} characters left | ${messageCount} message${messageCount > 1 ? 's' : ''}`;
 }
+function removeSpacesFromMobileNumbers() {
+    Excel.run(function (context) {
+        const sheet = context.workbook.worksheets.getActiveWorksheet();
+        const usedRange = sheet.getUsedRange();
+        usedRange.load("rowCount");
+
+        return context.sync().then(function () {
+            const range = sheet.getRange("A2:A" + usedRange.rowCount);
+            range.load("values");
+
+            return context.sync().then(function () {
+                const cleanedNumbers = range.values.map(row => {
+                    return [String(row[0]).replace(/\s+/g, '')]; // Remove all spaces
+                });
+
+                // Write cleaned numbers back to the same range
+                range.values = cleanedNumbers;
+
+                return context.sync().then(function () {
+                    console.log("Spaces removed from mobile numbers.");
+                });
+            });
+        });
+    }).catch(function (error) {
+        console.error("Error removing spaces from mobile numbers:", error);
+    });
+}
+
 function getNonEmptyMobileNumbers() {
+    removeSpacesFromMobileNumbers();
     return Excel.run(function (context) {
         const sheet = context.workbook.worksheets.getActiveWorksheet();
 

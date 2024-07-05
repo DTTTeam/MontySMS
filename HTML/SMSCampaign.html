@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SMS Campaign Without Template</title>
     <link rel="stylesheet" href="https://DTTTeam.github.io/MontySMS/CSS/SMSCampaign.css">
     <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.2.1/exceljs.min.js"></script>
     <script src="https://unpkg.com/libphonenumber-js/bundle/libphonenumber-max.js"></script>
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="campaign-container">
@@ -17,7 +17,15 @@
             <img src="https://DTTTeam.github.io/MontySMS/Images/loading.svg" alt="Loading...">
         </div>
         <div class="balance-container">
-            <div id="currentBalance" class="balance-label">Loading...</div>
+            <div id="clientInfo" class="client-info">
+                <div id="clientName" class="client-name">
+                    <i class="fas fa-user"></i> <span id="clientFullName">Loading...</span>
+                </div>
+                <!--<div id="clientUsername" class="client-username">-->
+                    <!--<i class="fas fa-envelope"></i> <span id="clientEmail">Loading...</span>-->
+                <!--</div>-->
+                <div id="currentBalance" class="balance-label">Loading...</div>
+            </div>
         </div>
         <form id="campaignForm">
             <div class="form-section">
@@ -40,20 +48,22 @@
             <div class="form-section">
                 <label for="group" class="form-label">Group</label>
                 <div class="dropdown">
-                    <button type="button" id="groupDropdownButton" class="dropdown-button">Select Groups</button>
+                    <button type="button" id="groupDropdownButton" class="dropdown-button">
+                        <img src="https://DTTTeam.github.io/MontySMS/Images/Group.png" alt="Icon"> Select Groups
+                    </button>
                     <div id="groupDropdownContent" class="dropdown-content">
                         <input type="text" id="groupSearch" placeholder="Search for groups..." onkeyup="filterGroups()">
-                        <!-- Checkbox options will be populated dynamically -->
                     </div>
                 </div>
             </div>
             <div class="form-section">
                 <label for="contact" class="form-label">Contact</label>
                 <div class="dropdown">
-                    <button type="button" id="contactDropdownButton" class="dropdown-button">Select Contacts</button>
+                    <button type="button" id="contactDropdownButton" class="dropdown-button">
+                        <img src="https://DTTTeam.github.io/MontySMS/Images/Contact.png" alt="Icon"> Select Contacts
+                    </button>
                     <div id="contactDropdownContent" class="dropdown-content">
                         <input type="text" id="contactSearch" placeholder="Search for contacts..." onkeyup="filterContacts()">
-                        <!-- Checkbox options will be populated dynamically -->
                     </div>
                 </div>
             </div>
@@ -70,20 +80,20 @@
                     <div class="left-buttons">
                         <button type="button" id="dropdownButton" class="dropdown-button">+</button>
                         <button type="button" id="shortenUrlButton" class="img-button">
-                            <img src="https://DTTTeam.github.io/MontySMS/Images/ShortLink.png" alt="Shorten URL" />
+                            <img src="https://DTTTeam.github.io/MontySMS/Images/ShortLink.png" alt="Shorten URL">
                         </button>
                     </div>
                     <p id="messageCounter">0/160 characters | 160 characters left | 1 message</p>
                     <div id="dropdownContent" class="dropdown-content">
-                        <label><input type="checkbox" value="LongUrl"> LongUrl</label>
-                        <label><input type="checkbox" value="Title"> Title</label>
-                        <label><input type="checkbox" value="FirstName"> FirstName</label>
-                        <label><input type="checkbox" value="LastName"> LastName</label>
-                        <label><input type="checkbox" value="Country"> Country</label>
-                        <label><input type="checkbox" value="Email"> Email</label>
-                        <label><input type="checkbox" value="Address"> Address</label>
-                        <label><input type="checkbox" value="City"> City</label>
-                        <label><input type="checkbox" value="Gender"> Gender</label>
+                        <label><input type="checkbox" value="LongUrl"><span>LongUrl</span></label>
+                        <label><input type="checkbox" value="Title"><span>Title</span></label>
+                        <label><input type="checkbox" value="FirstName"><span>FirstName</span></label>
+                        <label><input type="checkbox" value="LastName"><span>LastName</span></label>
+                        <label><input type="checkbox" value="Country"><span>Country</span></label>
+                        <label><input type="checkbox" value="Email"><span>Email</span></label>
+                        <label><input type="checkbox" value="Address"><span>Address</span></label>
+                        <label><input type="checkbox" value="City"><span>City</span></label>
+                        <label><input type="checkbox" value="Gender"><span>Gender</span></label>
                     </div>
                 </div>
             </div>
@@ -94,7 +104,6 @@
         </form>
     </div>
     <div id="notification" class="notification"></div>
-
     <div id="urlModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -109,9 +118,6 @@
             </form>
         </div>
     </div>
-
-
-  
     <script src="https://DTTTeam.github.io/MontySMS/dist/SMSCampaign.bundle.js" defer></script>
 </body>
 </html>

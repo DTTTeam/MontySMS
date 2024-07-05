@@ -14,6 +14,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (registerButton) {
         registerButton.addEventListener('click', openRegisterPage);
     }
+
+
 });
 
 // Open register page
@@ -68,7 +70,7 @@ async function login(username, password) {
             localStorage.setItem('refreshToken', data.data.refreshToken);
             localStorage.setItem('externalUserId', data.data.externalUserId);
             localStorage.setItem('clientId', data.data.clientId);
-
+            localStorage.setItem('backNavigation', 'false');
             window.location.href = "SMSCampaign.html";
         } else {
             showNotification("Unexpected response format.", "error");
@@ -102,3 +104,5 @@ function showNotification(message, type) {
         notification.classList.remove('show');
     }, 3000);
 }
+
+
