@@ -1,10 +1,21 @@
-﻿.campaign-container {
+﻿* {
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #fff;
+    margin: 0;
+    padding: 0;
+    font-family: 'Roboto', sans-serif;
+}
+
+.campaign-container {
     display: flex;
     flex-direction: column;
     align-items: center;
     margin: 20px auto;
     padding: 20px;
-    width: 90%;
+    width: 100%;
     max-width: 500px;
     background: #fff;
     border-radius: 10px;
@@ -13,18 +24,11 @@
 }
 
 .loading {
+    display: none;
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    display: none;
-    z-index: 10;
-}
-
-h1 {
-    font-size: 24px;
-    margin-bottom: 20px;
-    text-align: center;
 }
 
 form {
@@ -38,17 +42,20 @@ form {
 label.form-label {
     display: block;
     margin-bottom: 10px;
-    font-weight: bold;
+    font-weight: 500;
+    color: #333;
 }
 
 input[type="text"],
 select,
 textarea {
     width: 100%;
-    padding: 8px;
+    padding: 10px;
     box-sizing: border-box;
     border: 1px solid #ccc;
     border-radius: 5px;
+    font-size: 14px;
+    font-family: 'Roboto', sans-serif;
 }
 
 textarea {
@@ -78,21 +85,59 @@ textarea {
     margin-right: 10px;
 }
 
-#dropdownButton {
-    padding: 5px 8px;
+.dropdown-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 20px;
+    background-color: #fff;
     border: none;
-    border-radius: 5px;
-    background: #ed204c;
-    color: white;
+    color: #ed204c;
     cursor: pointer;
-    font-size: 14px;
-    width: 35px;
-    text-align: center;
-    display: inline-block;
+    font-size: 36px;
+    width: 100%;
+    box-sizing: border-box;
+    position: relative;
 }
 
-    #dropdownButton:hover {
-        background: #d11a3a;
+    .dropdown-button img {
+        position: absolute;
+        left: 10px;
+        width: 24px;
+        height: 24px;
+    }
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #fff;
+    width: 100%; /* Match the width of the dropdown button */
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1;
+    padding: 10px;
+    max-height: 200px;
+    overflow-y: auto;
+    top: 35px;
+    margin-top: 5px;
+}
+
+    .dropdown-content label {
+        display: flex;
+        align-items: center;
+        margin-bottom: 5px;
+        font-size: 14px;
+    }
+
+        .dropdown-content label input {
+            margin-right: 10px;
+        }
+
+        .dropdown-content label span {
+            margin-left: 5px;
+        }
+
+    .dropdown-content.show {
+        display: block;
     }
 
 .img-button {
@@ -100,6 +145,7 @@ textarea {
     border: none;
     cursor: pointer;
     margin-left: 5px;
+    margin-top: -10px;
 }
 
     .img-button img {
@@ -113,88 +159,13 @@ textarea {
     width: 100%;
 }
 
-.dropdown-button {
-    background: rgba(0, 0, 0, 0.87);
-    color: white;
-    padding: 10px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
-    width: 100%;
-    text-align: left;
-}
-
-    .dropdown-button:hover {
-        background: rgba(0, 0, 0, 0.87);
-    }
-
-.dropdown-content {
-    display: none;
-    position: absolute;
-    background-color: #f9f9f9;
-    min-width: 100%;
-    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
-    z-index: 1;
-    padding: 10px;
-    max-height: 200px;
-    overflow-y: auto;
-    top: 35px;
-    margin-top: 5px;
-}
-
-    .dropdown-content label {
-        display: block;
-        margin-bottom: 5px;
-    }
-
-        .dropdown-content label input {
-            margin-right: 5px;
-        }
-
-#groupSearch,
-#contactSearch {
-    width: 100%;
-    padding: 8px;
-    box-sizing: border-box;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    margin-bottom: 10px;
-}
-
-.show {
-    display: block;
-}
-
-.button-group {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 20px;
-}
-
-.btn {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    background: #ed204c;
-    color: white;
-    cursor: pointer;
-    font-size: 14px;
-    width: 45%;
-    text-align: center;
-}
-
-    .btn:hover {
-        background: #d11a3a;
-    }
-
 #groupDropdownButton,
 #contactDropdownButton {
     padding: 10px 20px;
     border: none;
     border-radius: 5px;
     background: #ed204c;
-    color: white;
+    color: #fff;
     cursor: pointer;
     font-size: 16px;
     width: 100%;
@@ -220,7 +191,7 @@ textarea {
 }
 
 .modal-content {
-    background-color: #fefefe;
+    background-color: #fff;
     margin: auto;
     padding: 20px;
     border: 1px solid #888;
@@ -238,7 +209,7 @@ textarea {
 
     .close:hover,
     .close:focus {
-        color: black;
+        color: #000;
         text-decoration: none;
         cursor: pointer;
     }
@@ -250,15 +221,11 @@ textarea {
     left: 50%;
     transform: translate(-50%, -50%);
     background-color: #ed204c;
-    color: white;
+    color: #fff;
     text-align: center;
     padding: 15px;
     border-radius: 5px;
     z-index: 9999;
-}
-
-.show {
-    display: block;
 }
 
 .balance-container {
@@ -266,13 +233,28 @@ textarea {
     flex-direction: column;
     align-items: center;
     margin-bottom: 20px;
+    text-align: center;
 }
 
-    .balance-container label {
-        font-size: 18px;
-        font-weight: bold;
-        margin-bottom: 5px;
-        color: #333;
+.client-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.client-name,
+.client-username {
+    font-size: 18px;
+    margin: 5px 0;
+    display: flex;
+    align-items: center;
+}
+
+    .client-name i,
+    .client-username i {
+        margin-right: 10px;
+        color: #ed204c;
     }
 
 .balance-label {
@@ -287,15 +269,6 @@ textarea {
     width: fit-content;
 }
 
-/* Show class to display the dropdown content */
-.dropdown-content {
-    display: none;
-}
-
-    .dropdown-content.show {
-        display: block;
-    }
-/* Input group styling */
 .input-group {
     display: flex;
     align-items: center;
@@ -306,74 +279,20 @@ textarea {
         margin-right: 10px;
     }
 
-/* Modal styling */
-.modal-content {
-    background-color: #fff;
-    margin: auto;
-    padding: 20px;
-    border: 1px solid #ccc;
-    width: 80%;
-    max-width: 400px;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    position: relative;
-}
-
-/* Header styling */
-.modal-header {
-    display: flex;
-    justify-content: flex-end;
-}
-
-/* Close button styling */
-.close {
-    color: #aaa;
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-    .close:hover,
-    .close:focus {
-        color: black;
-        text-decoration: none;
-    }
-
-/* Form styling */
-#urlForm {
-    display: flex;
-    flex-direction: column;
-}
-
-    #urlForm label {
-        margin-bottom: 10px;
-        font-weight: bold;
-    }
-
-    #urlForm input[type="text"] {
-        width: 100%;
-        padding: 8px;
-        box-sizing: border-box;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        margin-bottom: 10px;
-    }
-
-/* Button container styling */
 .button-container {
     display: flex;
     justify-content: flex-end;
 }
 
-/* Button styling */
 .btn {
     padding: 10px 20px;
     border: none;
     border-radius: 5px;
     background: #ed204c;
-    color: white;
+    color: #fff;
     cursor: pointer;
     font-size: 14px;
+    margin-top: 10px;
 }
 
     .btn:hover {
