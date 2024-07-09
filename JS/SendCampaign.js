@@ -428,7 +428,6 @@ function setupEventListeners(campaignId) {
         window.location.href = 'SMSCampaign.html';
     });
 }
-
 async function sendCampaign(campaignId) {
     const apiSendCampaign = process.env.API_SendCampaign;
     const sendButton = document.getElementById('sendButton');

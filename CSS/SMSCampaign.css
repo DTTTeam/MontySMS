@@ -298,3 +298,32 @@ textarea {
     .btn:hover {
         background: #d11a3a;
     }
+.button-group {
+    display: flex;
+    justify-content: space-between; /* Distribute space between the buttons */
+    gap: 10px;
+}
+
+.btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #ff4b6e; /* Adjust button background color */
+    border: none;
+    color: white;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    padding: 10px 20px; /* Add some padding for better appearance */
+    gap: 8px; /* Space between icon and text */
+}
+
+    .btn img {
+        width: 18px; /* Adjust based on icon size */
+        height: 18px; /* Adjust based on icon size */
+    }
+
+    .btn:hover {
+        background-color: #e03d5c; /* Adjust hover background color */
+    }

@@ -42,16 +42,57 @@ document.addEventListener("DOMContentLoaded", function () {
                     updateMessageCounter();
                     restoreFormData();
                 } else {
-                    localStorage.removeItem('formData');
+                    clearDataOnLoad();
                 }
+                hideLoading();
+            }).catch(function (error) {
+                console.error("Error fetching data:", error);
                 hideLoading();
             });
         } else {
             console.error("This script only runs in Excel.");
         }
     });
+
+
+
 });
-;
+
+function clearDataOnLoad() {
+    // Remove formData and excelData from localStorage
+    localStorage.removeItem('formData');
+    localStorage.removeItem('excelData');
+
+    // Uncheck all checkboxes in the group and contact dropdowns
+    Array.from(document.querySelectorAll('#groupDropdownContent input[type=checkbox]')).forEach(checkbox => checkbox.checked = false);
+    Array.from(document.querySelectorAll('#contactDropdownContent input[type=checkbox]')).forEach(checkbox => checkbox.checked = false);
+
+    Excel.run(function (context) {
+        const sheet = context.workbook.worksheets.getActiveWorksheet();
+        const usedRange = sheet.getUsedRange();
+        usedRange.load("rowCount");
+
+        return context.sync().then(function () {
+            // Ensure the header row (A1) is not cleared
+            if (usedRange.rowCount > 1) {
+                const range = sheet.getRange("A2:A" + usedRange.rowCount);
+
+                return context.sync().then(function () {
+                    // Clear the range excluding the header
+                    range.clear(Excel.ClearApplyTo.contents);
+
+                    return context.sync().then(function () {
+                        console.log("Mobile numbers column cleared, header intact.");
+                    });
+                });
+            } else {
+                console.log("No data to clear, only the header row exists.");
+            }
+        });
+    }).catch(function (error) {
+        console.error("Error clearing mobile numbers column:", error);
+    });
+}
 
 function setupEventListeners() {
     const templateDropdown = document.getElementById('template');
@@ -1067,233 +1108,7 @@ function launchCampaign() {
 
 
 
-//function handleValidationError() {
-//    isCampaignLaunching = false;
-//}
-//function handleValidationSuccess(response, campaignName) {
-//    const loadingIndicator = document.getElementById('loadingIndicator');
-//    loadingIndicator.style.display = 'block';
-//    const data = response.data;
 
-//    var validationData = {
-//        campaignName: campaignName,
-//        campaignId: data.campaignId,
-//        validUrl: data.validUrl || '', // Handle null values
-//        inValidUrl: data.inValidUrl || '', // Handle null values
-//        totalValidCount: data.totalValidCount || 0, // Handle null values
-//        totalInValidCount: data.totalInValidCount || 0, // Handle null values
-//        totalCost: data.totalValidRate || 0, // Handle null values
-//        reason: data.reason || ''
-//    };
-
-//    if (validationData.reason === "do not have enough balance") {
-//        showNotification("You do not have enough balance.");
-//        loadingIndicator.style.display = 'none';
-//        return; // Prevent navigation to the next HTML page
-//    }
-
-//    localStorage.setItem('validationData', JSON.stringify(validationData));
-//    saveFormData();
-//    window.location.href = 'SendCampaign.html';
-//}
-
-//async function validateCampaignNormally(campaignName, campaignContent, senderId, phoneNumbers, hasShortUrl, longUrl) {
-
- 
-//    const apiValidate = process.env.API_Validate;
-//    const placeholders = extractPlaceholders(campaignContent);
-
-//    const requestBody = {
-//        Campaign: {
-//            ChannelId: process.env.SMS_Channel,
-//            Name: campaignName,
-//            Content: campaignContent,
-//            SenderId: senderId,
-//            HasShortUrl: hasShortUrl,
-//            LongUrl: longUrl,
-//            ClientAccountId: localStorage.getItem('clientId'),
-//            Variables: placeholders,
-//            HasBlacklistShortUrl: false
-//        },
-//        PhoneNumbers: phoneNumbers.map(String)
-//    };
-
-//    try {
-//        const response = await fetchWithAuth(apiValidate, {
-//            method: 'POST',
-//            headers: {
-//                'Content-Type': 'application/json'
-//            },
-//            body: JSON.stringify(requestBody)
-//        });
-
-//        if (!response.ok) {
-//            throw new Error(`Network response was not ok: ${response.statusText}`);
-//        }
-
-//        const data = await response.json();
-    
-//        return data;
-//    } catch (error) {
-//        console.error('Error validating campaign:', error);
-//        throw error;
-//    }
-//}
-//async function validateCampaignWithFile(campaignName, campaignContent, senderId, hasShortUrl, longUrl) {
-//    const apiValidateFile = process.env.API_Validate_File;
-//    const tenantKey = process.env.Key_Tenant;
-//    const SMSCHannel = process.env.SMS_Channel;
-//    const placeholders = extractPlaceholders(campaignContent);
-
-//    try {
-//        await Excel.run(async (context) => {
-//            const workbook = context.workbook;
-//            const worksheet = workbook.worksheets.getActiveWorksheet();
-
-//            const usedRange = worksheet.getUsedRange();
-//            usedRange.load("values");
-
-//            await context.sync();
-
-//            const workbookBlob = await getWorkbookBlob(usedRange.values);
-
-//            const formData = new FormData();
-//            formData.append('file', workbookBlob, "SampleDestinationsWithVariablesAndLongUrl.xlsx");
-//            formData.append('countryCode', '');
-//            formData.append('Campaign', JSON.stringify({
-//                channelId: SMSCHannel,
-//                Name: campaignName,
-//                Content: campaignContent,
-//                SenderId: senderId,
-//                HasShortUrl: hasShortUrl,
-//                LongUrl: longUrl,
-//                ClientAccountId: localStorage.getItem('clientId'),
-//                Variables: placeholders,
-//                HasBlacklistShortUrl: false
-//            }));
-//            formData.append('LongUrlFromFile', "false");
-
-//            const response = await fetchWithAuth(apiValidateFile, {
-//                method: 'POST',
-//                headers: {
-//                    'Accept': 'application/json, text/plain, */*',
-//                    'Accept-Language': 'en-US,en;q=0.9,ar;q=0.8',
-//                    'Cache-Control': 'no-cache',
-//                    'Connection': 'keep-alive',
-//                    'Origin': 'https://app.montymobile.com',
-//                    'Pragma': 'no-cache',
-//                    'Referer': 'https://app.montymobile.com/',
-//                    'Sec-Fetch-Dest': 'empty',
-//                    'Sec-Fetch-Mode': 'cors',
-//                    'Sec-Fetch-Site': 'same-site',
-//                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
-//                    'sec-ch-ua': '"Google Chrome";v="125", "Chromium";v="125", "Not.A/Brand";v="24"',
-//                    'sec-ch-ua-mobile': '?0',
-//                    'sec-ch-ua-platform': '"Windows"',
-//                },
-//                body: formData
-//            });
-
-//            if (!response.ok) {
-//                throw new Error(`Network response was not ok: ${response.statusText}`);
-//            }
-
-//            const data = await response.json();
-
-
-//            handleValidationSuccess(data, campaignName);
-
-//        });
-//    } catch (error) {
-//        console.error("Error validating campaign with file: ", error);
-//        showNotification('Error validating campaign. Please try again.', "Error");
-//    }
-//}
-//function launchCampaign() {
-
-
-//    if (isCampaignLaunching) {
-//        showNotification('Campaign launch already in progress...', "Valid");
-      
-      
-//        return;
-//    }
-//    isCampaignLaunching = true;
-//    localStorage.removeItem('formData');
-//    const campaignName = document.getElementById('campaignName').value;
-//    const sender = document.getElementById('sender').value;
-//    let message = document.getElementById('message').value;
-//    const longUrlInput = document.getElementById('longUrl').value;
-
-//    getNonEmptyMobileNumbers().then(phoneNumbers => {
-//        if (!campaignName || !sender || !message || phoneNumbers.length <= 1) {
-//            showNotification('Please enter all mandatory fields: campaign name, sender, mobile number, and message.', "Error");
-//            isCampaignLaunching = false;
-//            return;
-//        }
-
-//        let hasShortUrl = false;
-//        let longUrl = null;
-
-//        if (longUrlInput) {
-//            hasShortUrl = true;
-//            longUrl = longUrlInput;
-//            getShortUrl(longUrlInput).then(shortUrl => {
-
-
-//                handleColumnType().then(isVariable => {
-//                    if (isVariable) {
-//                        validateCampaignWithFile(campaignName, message, sender, hasShortUrl, longUrl).then(data => {
-//                            handleValidationSuccess(data, campaignName);
-                          
-//                        }).catch(error => {
-//                            handleValidationError();
-//                        });
-//                    } else {
-
-//                        validateCampaignNormally(campaignName, message, sender, phoneNumbers, hasShortUrl, longUrl).then(data => {
-//                            handleValidationSuccess(data, campaignName);
-//                        }).catch(error => {
-//                            handleValidationError();
-//                        });
-//                    }
-//                }).catch(error => {
-//                    console.error('Error checking column type:', error);
-//                    showNotification('Error checking column type. Please try again.', "Error");
-//                    isCampaignLaunching = false;
-//                });
-//            }).catch(error => {
-//                console.error('Error getting short URL:', error);
-//                showNotification('Error getting short URL. Please try again.', "Error");
-//                isCampaignLaunching = false;
-//            });
-//        } else {
-//            handleColumnType().then(isVariable => {
-//                if (isVariable) {
-//                    validateCampaignWithFile(campaignName, message, sender, hasShortUrl, longUrl).then(data => {
-//                        handleValidationSuccess(data, campaignName);
-//                    }).catch(error => {
-//                        handleValidationError();
-//                    });
-//                } else {
-//                    validateCampaignNormally(campaignName, message, sender, phoneNumbers, hasShortUrl, longUrl).then(data => {
-//                        handleValidationSuccess(data, campaignName);
-//                    }).catch(error => {
-//                        handleValidationError();
-//                    });
-//                }
-//            }).catch(error => {
-//                console.error('Error checking column type:', error);
-//                showNotification('Error checking column type. Please try again.', "Error");
-//                isCampaignLaunching = false;
-//            });
-//        }
-//    }).catch(error => {
-//        console.error('Error collecting phone numbers:', error);
-//        showNotification('Error collecting phone numbers. Please try again.', "Error");
-//        isCampaignLaunching = false;
-//    });
-//}
 
 function saveFormData() {
     const formData = {
@@ -1473,6 +1288,8 @@ function removeSpacesFromMobileNumbers() {
         console.error("Error removing spaces from mobile numbers:", error);
     });
 }
+
+
 
 function getNonEmptyMobileNumbers() {
     removeSpacesFromMobileNumbers();
