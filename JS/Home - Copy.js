@@ -3,36 +3,20 @@ const TenantKey = process.env.Key_Tenant;
 const URL = process.env.URL;
 const registerPageUrl = process.env.Register;
 
-Office.onReady((info) => {
-    // Office is ready
-    $(document).ready(function () {
-        const loginForm = document.getElementById('loginForm');
-        const registerButton = document.getElementById('registerButton');
+document.addEventListener("DOMContentLoaded", () => {
+    const loginForm = document.getElementById('loginForm');
+    const registerButton = document.getElementById('registerButton');
 
-        if (loginForm) {
-            loginForm.addEventListener('submit', handleFormSubmit);
-        }
+    if (loginForm) {
+        loginForm.addEventListener('submit', handleFormSubmit);
+    }
 
-        if (registerButton) {
-            registerButton.addEventListener('click', openRegisterPage);
-        }
-    });
+    if (registerButton) {
+        registerButton.addEventListener('click', openRegisterPage);
+    }
+
+
 });
-
-//document.addEventListener("DOMContentLoaded", () => {
-//    const loginForm = document.getElementById('loginForm');
-//    const registerButton = document.getElementById('registerButton');
-
-//    if (loginForm) {
-//        loginForm.addEventListener('submit', handleFormSubmit);
-//    }
-
-//    if (registerButton) {
-//        registerButton.addEventListener('click', openRegisterPage);
-//    }
-
-
-//});
 
 // Open register page
 function openRegisterPage() {
@@ -87,7 +71,6 @@ async function login(username, password) {
             localStorage.setItem('externalUserId', data.data.externalUserId);
             localStorage.setItem('clientId', data.data.clientId);
             localStorage.setItem('backNavigation', 'false');
-         
             window.location.href = "SMSCampaign.html";
         } else {
             showNotification("Unexpected response format.", "error");

@@ -26,22 +26,22 @@
     position: relative;
 }
 
-    .login-container img {
-        width: 100px;
-        margin-bottom: 20px;
-    }
+.login-container img {
+    width: 100px;
+    margin-bottom: 20px;
+}
 
 .input-container {
     margin-bottom: 15px;
     text-align: left;
 }
 
-    .input-container label {
-        display: block;
-        margin-bottom: 5px;
-        font-size: 14px;
-        color: #666;
-    }
+.input-container label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 14px;
+    color: #666;
+}
 
 .input-icon-container {
     display: flex;
@@ -52,28 +52,28 @@
     padding: 10px;
 }
 
-    .input-icon-container i {
-        font-size: 18px;
-        color: #888;
-        margin-right: 10px;
-    }
+.input-icon-container i {
+    font-size: 18px;
+    color: #888;
+    margin-right: 10px;
+}
 
-    .input-icon-container input {
-        width: 100%;
-        border: none;
-        background: none;
-        outline: none;
-        padding: 5px;
-        font-size: 14px;
-    }
+.input-icon-container input {
+    width: 100%;
+    border: none;
+    background: none;
+    outline: none;
+    padding: 5px;
+    font-size: 14px;
+}
 
-        .input-icon-container input::placeholder {
-            color: #999;
-        }
+.input-icon-container input::placeholder {
+    color: #999;
+}
 
-    .input-icon-container .ms-Icon--RedEye {
-        cursor: pointer;
-    }
+.input-icon-container .ms-Icon--RedEye {
+    cursor: pointer;
+}
 
 .login-container button {
     width: 100%;
@@ -87,26 +87,26 @@
     margin-top: 10px;
 }
 
-    .login-container button:hover {
-        background-color: #4a4a4a;
-    }
+.login-container button:hover {
+    background-color: #4a4a4a;
+}
 
 .login-container .register-button {
     background-color: #0078d4;
 }
 
-    .login-container .register-button:hover {
-        background-color: #005a9e;
-    }
+.login-container .register-button:hover {
+    background-color: #005a9e;
+}
 
 .login-container a {
     color: #0078d4;
     text-decoration: none;
 }
 
-    .login-container a:hover {
-        text-decoration: underline;
-    }
+.login-container a:hover {
+    text-decoration: underline;
+}
 
 .spinner {
     display: none;
@@ -155,11 +155,9 @@
     0% {
         opacity: 0;
     }
-
     50% {
         opacity: 1;
     }
-
     100% {
         opacity: 0;
     }
@@ -169,7 +167,6 @@
     0% {
         transform: rotate(0deg);
     }
-
     100% {
         transform: rotate(360deg);
     }
@@ -208,16 +205,16 @@ footer {
     gap: 10px; /* Add space between icons */
 }
 
-    .social-icons a {
-        margin: 0 10px;
-    }
+.social-icons a {
+    margin: 0 10px;
+}
 
-    .social-icons img {
-        width: 24px; /* Adjusted width for consistent size */
-        height: 24px; /* Adjusted height for consistent size */
-        vertical-align: middle;
-        background-color: transparent;
-    }
+.social-icons img {
+    width: 24px; /* Adjusted width for consistent size */
+    height: 24px; /* Adjusted height for consistent size */
+    vertical-align: middle;
+    background-color: transparent;
+}
 
 footer p.copyright {
     font-weight: bold; /* Make the text bold */
