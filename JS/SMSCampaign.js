@@ -9,14 +9,22 @@ document.addEventListener("DOMContentLoaded", function () {
         console.log("Office.onReady event triggered");
 
         if (info.host === Office.HostType.Excel) {
-            Initialize();
+            Initialize().then(() => {
+                fetchData().then(() => {
+                    console.log(localStorage.getItem("login"));
+                    if (localStorage.getItem("login") === "true") {
+                        clearSavedData();
+                    } else {
+                        restoreFormData();
+                    }
+                });
+            });
         } else {
             console.error("This script only runs in Excel.");
         }
     });
 });
-
-function Initialize() {
+async function Initialize() {
     AddMobileNumberColumn();
     loadPlaceholders();
     updateMessageCounter();
@@ -29,12 +37,8 @@ function Initialize() {
         container.style.height = '100%';
     }
 
-    fetchData().then(() => {
-        const backNavigation = localStorage.getItem('backNavigation');
-        if (backNavigation === 'true') {
-            localStorage.removeItem('backNavigation');
-        }
-
+    try {
+      
         const templateDropdown = document.getElementById('template');
         templateDropdown.addEventListener('change', handleTemplateChange);
         document.getElementById('backButton').addEventListener('click', backButton);
@@ -48,12 +52,142 @@ function Initialize() {
         document.getElementById('closeUrlButton').addEventListener('click', closeUrlDialog);
         document.getElementById('launchButton').addEventListener('click', validateForm);
         document.getElementById('sender').addEventListener('change', handleSenderChange);
-   
-    }).catch(function (error) {
-        console.error("Error fetching data:", error);
-    });
+    } catch (error) {
+        console.error("Error initializing event listeners:", error);
+    }
 }
 
+//Data 
+function saveFormData() {
+    try {
+        const campaignNameElem = document.getElementById('campaign-name');
+        const senderElem = document.getElementById('sender');
+        const messageElem = document.getElementById('message');
+        const templateElem = document.getElementById('template');
+        const variableDropdownElem = document.getElementById('variable-dropdown');
+
+        if (!campaignNameElem || !senderElem || !messageElem || !templateElem || !variableDropdownElem) {
+            throw new Error('One or more form elements are missing');
+        }
+
+        const formData = {
+            campaignName: campaignNameElem.value,
+            sender: senderElem.value,
+            message: messageElem.value,
+            selectedGroups: Array.from(document.querySelectorAll('#group-list input[type=checkbox]:checked')).map(checkbox => checkbox.value),
+            selectedContacts: Array.from(document.querySelectorAll('#contact-list input[type=checkbox]:checked')).map(checkbox => checkbox.value),
+            contactDropdownContacts: Array.from(document.querySelectorAll('#contactDropdownContent input[type=checkbox]:checked')).map(checkbox => checkbox.value),
+            templateId: templateElem.value,
+            type: variableDropdownElem.value,
+       
+        };
+
+        console.log('Saving formData:', formData);
+        localStorage.setItem('formData', JSON.stringify(formData));
+
+        // Save Excel data
+        Excel.run(async (context) => {
+            const sheet = context.workbook.worksheets.getActiveWorksheet();
+            const usedRange = sheet.getUsedRange();
+            usedRange.load('values');
+            await context.sync();
+
+            const excelData = usedRange.values;
+            console.log('Saving excelData:', excelData);
+            localStorage.setItem('excelData', JSON.stringify(excelData));
+        }).catch(function (error) {
+            console.error('Error saving Excel data:', error);
+        });
+    } catch (error) {
+        console.error('Error in saveFormData:', error);
+    }
+}
+function restoreFormData() {
+    try {
+        let formData = localStorage.getItem('formData');
+        let excelData = localStorage.getItem('excelData');
+
+        // Check if formData is a valid JSON string
+        try {
+            formData = JSON.parse(formData);
+        } catch (e) {
+            console.error('Error parsing formData:', e);
+            formData = null;
+        }
+
+        // Check if excelData is a valid JSON string
+        try {
+            excelData = JSON.parse(excelData);
+        } catch (e) {
+            console.error('Error parsing excelData:', e);
+            excelData = null;
+        }
+
+        console.log('Restoring formData:', formData);
+        console.log('Restoring excelData:', excelData);
+
+        if (formData) {
+            // Populate the select elements after the options are available
+            setTimeout(() => {
+                if (document.getElementById('campaign-name')) {
+                    document.getElementById('campaign-name').value = formData.campaignName;
+                }
+                if (document.getElementById('sender')) {
+                    document.getElementById('sender').value = formData.sender;
+                }
+                if (document.getElementById('template')) {
+                    document.getElementById('template').value = formData.templateId;
+                }
+                if (document.getElementById('variable-dropdown')) {
+                    document.getElementById('variable-dropdown').value = formData.type;
+                }
+                if (document.getElementById('message')) {
+                    document.getElementById('message').value = formData.message;
+                }
+            
+
+                // Restore selected groups
+                const selectedGroups = formData.selectedGroups || [];
+                selectedGroups.forEach(group => {
+                    const checkbox = document.querySelector(`#group-list input[type=checkbox][value="${group}"]`);
+                    if (checkbox) {
+                        checkbox.checked = true;
+                    }
+                });
+
+                // Restore selected contacts
+                const selectedContacts = formData.selectedContacts || [];
+                selectedContacts.forEach(contact => {
+                    const checkbox = document.querySelector(`#contact-list input[type=checkbox][value="${contact}"]`);
+                    if (checkbox) {
+                        checkbox.checked = true;
+                    }
+                });
+
+                const contactDropdownContacts = formData.contactDropdownContacts || [];
+                contactDropdownContacts.forEach(contact => {
+                    const checkbox = document.querySelector(`#contactDropdownContent input[type=checkbox][value="${contact}"]`);
+                    if (checkbox) {
+                        checkbox.checked = true;
+                    }
+                });
+            }, 1000); 
+        }
+
+        if (excelData) {
+            Excel.run(async (context) => {
+                const sheet = context.workbook.worksheets.getActiveWorksheet();
+                const range = sheet.getRangeByIndexes(0, 0, excelData.length, excelData[0].length);
+                range.values = excelData;
+                await context.sync();
+            }).catch(function (error) {
+                console.error('Error restoring Excel data:', error);
+            });
+        }
+    } catch (error) {
+        console.error('Error in restoreFormData:', error);
+    }
+}
 async function fetchData() {
     await fetchClient();
     await fetchBalance();
@@ -396,12 +530,10 @@ function fetchContactsFromGroup() {
 
 
 
-
-
 //Populate
 function populateTemplates(templates) {
     const templateSelect = document.getElementById('template');
-    templateSelect.innerHTML = '<option value="">Select a template</option>';
+  
 
     templates.forEach(template => {
         const option = document.createElement('option');
@@ -409,12 +541,10 @@ function populateTemplates(templates) {
         option.text = template.name;
         templateSelect.appendChild(option);
     });
-    updateMessageCounter();
- 
 }
 function populateSenders(senders) {
     const senderSelect = document.getElementById('sender');
-    senderSelect.innerHTML = '<option value="">Select a sender</option>'; // Clear existing options and add default option
+
 
     senders.forEach(sender => {
         const option = document.createElement('option');
@@ -422,10 +552,7 @@ function populateSenders(senders) {
         option.text = sender.name;
         senderSelect.appendChild(option);
     });
-
-
 }
-
 function populateGroups(groups) {
     const groupList = document.getElementById('group-list');
     groupList.innerHTML = '';
@@ -460,18 +587,7 @@ function populateContacts(contacts) {
 
 
 //Excel
-function checkAndAddColumns() {
 
-    const messageField = document.getElementById('message').value;
-    console.log("Message content:", messageField); // Debugging: Check the message content
-    if (messageField.includes('{') && messageField.includes('}')) {
-        console.log("Message contains placeholders. Adding all columns."); // Debugging: Placeholder detected
-        AddAllColumns();
-    } else {
-        console.log("No placeholders found in the message. Adding mobile number column only."); // Debugging: No placeholder detected
-        AddMobileNumberColumn();
-    }
-}
 function AddAllColumns() {
     Excel.run(function (context) {
         const sheet = context.workbook.worksheets.getActiveWorksheet();
@@ -490,18 +606,37 @@ function AddAllColumns() {
         const usedRange = sheet.getUsedRange();
         usedRange.load('rowCount, columnCount');
 
-        return context.sync().then(() => {
-            // Clear all rows except for the header
-            if (usedRange.rowCount > 1) {
-                const dataRange = sheet.getRangeByIndexes(1, 0, usedRange.rowCount - 1, usedRange.columnCount);
-                dataRange.clear();
-            }
+        let mobileNumberData;
 
-            // Auto fit columns
-            sheet.getUsedRange().getEntireColumn().format.autofitColumns();
+        return context.sync()
+            .then(() => {
+                // Store Mobile Number data
+                if (usedRange.rowCount > 1) {
+                    const mobileNumberRange = sheet.getRangeByIndexes(1, 0, usedRange.rowCount - 1, 1);
+                    mobileNumberRange.load('values');
+                    return context.sync().then(() => {
+                        mobileNumberData = mobileNumberRange.values;
+                    });
+                }
+            })
+            .then(() => {
+                // Clear all rows except for the header
+                if (usedRange.rowCount > 1) {
+                    const dataRange = sheet.getRangeByIndexes(1, 0, usedRange.rowCount - 1, usedRange.columnCount);
+                    dataRange.clear();
+                }
 
-            console.log('All columns added and fitted successfully');
-        });
+                // Auto fit columns
+                sheet.getUsedRange().getEntireColumn().format.autofitColumns();
+
+                // Restore Mobile Number data
+                if (mobileNumberData) {
+                    const mobileNumberRange = sheet.getRangeByIndexes(1, 0, mobileNumberData.length, 1);
+                    mobileNumberRange.values = mobileNumberData;
+                }
+
+                console.log('All columns added and fitted successfully');
+            });
     }).catch(function (error) {
         console.error('Error adding all columns:', error);
     });
@@ -545,6 +680,7 @@ function AddMobileNumberColumn() {
         console.error("Error in AddMobileNumberColumn: " + error);
     });
 }
+
 function manageContactInExcel(event) {
     const mobileNumber = event.target.value;
     const isChecked = event.target.checked;
@@ -680,7 +816,7 @@ function updateMessageCounter() {
     const charCount = message.length;
     const unicodeRegex = /[^\u0000-\u007F]/;
     const isUnicode = unicodeRegex.test(message);
-    const charLimit = isUnicode ? 70 : 160;
+    const charLimit = isUnicode ? 60 : 160;
     const messageCount = Math.ceil(charCount / charLimit);
     const charsLeft = charLimit - (charCount % charLimit || charLimit); // Handle zero remainder case
 
@@ -694,26 +830,23 @@ function displayTemplate(template) {
 }
 function handleTemplateChange() {
     const templateId = document.getElementById('template').value;
-    const shortUrlButton = document.getElementById('shorturlButton');
+    const shortUrlButton = document.getElementById('urlButton');
     const placeholderButton = document.getElementById('placeholderButton');
+    const messageField = document.getElementById('message');
 
-    if (shortUrlButton && placeholderButton) {
-        if (templateId) {
-            shortUrlButton.style.display = 'none';
-            placeholderButton.style.display = 'none';
-        } else {
-            shortUrlButton.style.display = 'block';
-            placeholderButton.style.display = 'block';
-        }
+
+    if (!shortUrlButton || !placeholderButton || !messageField) {
+        return;
     }
 
-    const messageField = document.getElementById('message');
     if (templateId) {
         messageField.readOnly = true;
         fetchTemplateById(templateId)
             .then(template => {
                 if (template && template.text) {
                     messageField.value = template.text;
+                    shortUrlButton.style.display = 'none';
+                    placeholderButton.style.display = 'none';
                     updateMessageCounter();
                 } else {
                     console.error('Template text is undefined or template is null');
@@ -725,8 +858,40 @@ function handleTemplateChange() {
     } else {
         messageField.readOnly = false;
         messageField.value = ''; // Clear the message field
+        shortUrlButton.style.display = 'block';
+        placeholderButton.style.display = 'block';
         updateMessageCounter();
     }
+}
+function clearSavedData() {
+    localStorage.removeItem('formData');
+    Excel.run((context) => {
+        const sheet = context.workbook.worksheets.getActiveWorksheet();
+        const usedRange = sheet.getUsedRange();
+        usedRange.load("rowCount");
+
+        return context.sync().then(() => {
+            if (usedRange.rowCount > 1) {
+                const range = sheet.getRange("A2:A" + usedRange.rowCount);
+                return context.sync().then(() => {
+                    range.clear(Excel.ClearApplyTo.contents);
+                    return context.sync().then(() => {
+                        console.log("Mobile numbers column cleared, header intact.");
+                    });
+                });
+            } else {
+                console.log("No data to clear, only the header row exists.");
+            }
+        }).then(() => {
+            console.log('Saved data cleared.');
+        });
+    }).catch((error) => {
+        console.error('Error clearing saved data:', error);
+    });
+}
+function backButton()
+{
+    window.location.href = "Home.Html";
 }
 
 function handleDropdownChange() {
@@ -739,62 +904,7 @@ function handleDropdownChange() {
         AddMobileNumberColumn();
     }
 }
-function saveFormData() {
-    const formData = {
-        campaignName: document.getElementById('campaignName').value,
-        sender: document.getElementById('sender').value,
-        message: document.getElementById('message').value,
-        templateId: document.getElementById('template').value,
-        type: document.getElementById('variable-dropdown').value,
-        manualContacts: JSON.stringify(Array.from(manualContacts))
-    };
-    localStorage.setItem('formData', JSON.stringify(formData));
 
-    // Save Excel data
-    Excel.run(async (context) => {
-        const sheet = context.workbook.worksheets.getActiveWorksheet();
-        const usedRange = sheet.getUsedRange();
-        usedRange.load('values');
-        await context.sync();
-
-        const excelData = usedRange.values;
-        localStorage.setItem('excelData', JSON.stringify(excelData));
-    }).catch(function (error) {
-        console.error('Error saving Excel data:', error);
-    });
-}
-function restoreFormData() {
-    const formData = JSON.parse(localStorage.getItem('formData'));
-    if (formData) {
-        document.getElementById('campaignName').value = formData.campaignName;
-        document.getElementById('sender').value = formData.sender;
-        document.getElementById('message').value = formData.message;
-        document.getElementById('variable-dropdown').value = formData.type;
-
-        // Restore template selection
-        if (formData.templateId) {
-
-            document.getElementById('template').value = formData.templateId;
-            document.getElementById('shortenUrlButton').style.display = 'none';
-            document.getElementById('message').readOnly = true;
-            document.getElementById('placeholderList').style.display = 'none';
-
-        }
-
-        // Restore Excel data
-        const excelData = JSON.parse(localStorage.getItem('excelData'));
-        if (excelData) {
-            Excel.run(async (context) => {
-                const sheet = context.workbook.worksheets.getActiveWorksheet();
-                const range = sheet.getRange(`A1:${String.fromCharCode(64 + excelData[0].length)}${excelData.length}`);
-                range.values = excelData;
-                await context.sync();
-            }).catch(function (error) {
-                console.error('Error restoring Excel data:', error);
-            });
-        }
-    }
-}
 function showNotification(message, type) {
     const notification = document.getElementById('notification');
     notification.innerHTML = message; // Use innerHTML to support HTML tags
@@ -939,7 +1049,6 @@ function openUrlDialog() {
     const urlDialog = document.getElementById('urlDialog');
     urlDialog.style.display = 'block';
 }
-
 async function handleAddUrl() {
     const longUrl = document.getElementById('longUrl').value;
     if (longUrl) {
@@ -952,18 +1061,15 @@ async function handleAddUrl() {
         }
     }
 }
-
 function closeUrlDialog() {
     const urlDialog = document.getElementById('urlDialog');
     urlDialog.style.display = 'none';
 }
-
 function insertShortUrlIntoMessage(shortUrl) {
     const messageField = document.getElementById('message');
     messageField.value += ` ${shortUrl}`;
     updateMessageCounter();
 }
-
 async function getShortUrl(longUrl) {
     const apiUrl = process.env.API_ShortUrl;
 
@@ -987,7 +1093,6 @@ async function getShortUrl(longUrl) {
         throw error;
     }
 }
-
 
 //Campaign
 function validateForm(event) {
@@ -1036,6 +1141,36 @@ function validateForm(event) {
         console.error("Error validating form: ", error);
     });
 }
+function handleValidationError() {
+    isCampaignLaunching = false;
+
+}
+function handleValidationSuccess(response, campaignName) {
+
+    const data = response.data;
+
+    var validationData = {
+        campaignName: campaignName,
+        campaignId: data.campaignId,
+        validUrl: data.validUrl || '', // Handle null values
+        inValidUrl: data.inValidUrl || '', // Handle null values
+        totalValidCount: data.totalValidCount || 0, // Handle null values
+        totalInValidCount: data.totalInValidCount || 0, // Handle null values
+        totalCost: data.totalValidRate || 0, // Handle null values
+        reason: data.reason || ''
+    };
+    console.log(validationData);
+    if (validationData.reason === "do not have enough balance") {
+        showNotification("You do not have enough balance.");
+        return; // Prevent navigation to the next HTML page
+    }
+
+    localStorage.setItem('validationData', JSON.stringify(validationData));
+    saveFormData();
+    window.location.href = 'SendCampaign.html';
+
+
+}
 function launchCampaign(campaignName, sender, message, longUrlInput, phoneNumbers, dropdownValue) {
 
   
@@ -1065,36 +1200,6 @@ function launchCampaign(campaignName, sender, message, longUrlInput, phoneNumber
    
 }
 
-
-function handleValidationError() {
-    isCampaignLaunching = false;
- 
-}
-function handleValidationSuccess(response, campaignName) {
-  
-    const data = response.data;
-
-    var validationData = {
-        campaignName: campaignName,
-        campaignId: data.campaignId,
-        validUrl: data.validUrl || '', // Handle null values
-        inValidUrl: data.inValidUrl || '', // Handle null values
-        totalValidCount: data.totalValidCount || 0, // Handle null values
-        totalInValidCount: data.totalInValidCount || 0, // Handle null values
-        totalCost: data.totalValidRate || 0, // Handle null values
-        reason: data.reason || ''
-    };
-    console.log(validationData);
-    if (validationData.reason === "do not have enough balance") {
-        showNotification("You do not have enough balance.");
-        return; // Prevent navigation to the next HTML page
-    }
-   
-    localStorage.setItem('validationData', JSON.stringify(validationData));
-/*    window.location.href = 'SendCampaign.html';*/
-    saveFormData();
-    
-}
 async function validateCampaignNormally(campaignName, campaignContent, senderId, phoneNumbers, hasShortUrl, longUrl) {
  
     const apiValidate = process.env.API_Validate;

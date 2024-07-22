@@ -1,45 +1,34 @@
 ﻿const apiLogin = process.env.API_Login;
-const TenantKey = process.env.Key_Tenant;
-const URL = process.env.URL;
+const tenantKey = process.env.Key_Tenant;
+const url = process.env.URL;
 const registerPageUrl = process.env.Register;
 
 Office.onReady((info) => {
     // Office is ready
-    $(document).ready(function () {
+    $(document).ready(() => {
         const loginForm = document.getElementById('loginForm');
         const registerButton = document.getElementById('registerButton');
+        const togglePasswordIcon = document.getElementById('togglePasswordVisibility');
 
         if (loginForm) {
+            clearSavedData(); // Clear saved data when the page loads
             loginForm.addEventListener('submit', handleFormSubmit);
         }
 
         if (registerButton) {
             registerButton.addEventListener('click', openRegisterPage);
         }
+
+        if (togglePasswordIcon) {
+            togglePasswordIcon.addEventListener('click', togglePasswordVisibility);
+        }
     });
 });
 
-//document.addEventListener("DOMContentLoaded", () => {
-//    const loginForm = document.getElementById('loginForm');
-//    const registerButton = document.getElementById('registerButton');
-
-//    if (loginForm) {
-//        loginForm.addEventListener('submit', handleFormSubmit);
-//    }
-
-//    if (registerButton) {
-//        registerButton.addEventListener('click', openRegisterPage);
-//    }
-
-
-//});
-
-// Open register page
 function openRegisterPage() {
     window.location.href = registerPageUrl;
 }
 
-// Handle form submission
 function handleFormSubmit(event) {
     event.preventDefault();
     const username = document.getElementById('username').value;
@@ -51,15 +40,15 @@ function handleFormSubmit(event) {
     }
 
     showSpinner();
+    clearSavedData(); // Clear saved data before login
     login(username, password);
 }
 
-// Login function
 async function login(username, password) {
     const payload = {
-        "Username": username,
-        "Password": password,
-        "URL": URL
+        Username: username,
+        Password: password,
+        URL: url
     };
 
     try {
@@ -67,7 +56,7 @@ async function login(username, password) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Tenant': TenantKey
+                'Tenant': tenantKey
             },
             body: JSON.stringify(payload)
         });
@@ -86,8 +75,8 @@ async function login(username, password) {
             localStorage.setItem('refreshToken', data.data.refreshToken);
             localStorage.setItem('externalUserId', data.data.externalUserId);
             localStorage.setItem('clientId', data.data.clientId);
-            localStorage.setItem('backNavigation', 'false');
-         
+            localStorage.setItem('login', 'true');
+
             window.location.href = "SMSCampaign.html";
         } else {
             showNotification("Unexpected response format.", "error");
@@ -100,17 +89,41 @@ async function login(username, password) {
     }
 }
 
-// Show spinner
 function showSpinner() {
     document.getElementById('spinner').style.display = 'flex';
 }
 
-// Hide spinner
 function hideSpinner() {
     document.getElementById('spinner').style.display = 'none';
 }
 
-// Show notification
+function clearSavedData() {
+    localStorage.removeItem('formData');
+    Excel.run((context) => {
+        const sheet = context.workbook.worksheets.getActiveWorksheet();
+        const usedRange = sheet.getUsedRange();
+        usedRange.load("rowCount");
+
+        return context.sync().then(() => {
+            if (usedRange.rowCount > 1) {
+                const range = sheet.getRange("A2:A" + usedRange.rowCount);
+                return context.sync().then(() => {
+                    range.clear(Excel.ClearApplyTo.contents);
+                    return context.sync().then(() => {
+                        console.log("Mobile numbers column cleared, header intact.");
+                    });
+                });
+            } else {
+                console.log("No data to clear, only the header row exists.");
+            }
+        }).then(() => {
+            console.log('Saved data cleared.');
+        });
+    }).catch((error) => {
+        console.error('Error clearing saved data:', error);
+    });
+}
+
 function showNotification(message, type) {
     const notification = document.getElementById('notification');
     notification.textContent = message;
@@ -122,4 +135,14 @@ function showNotification(message, type) {
     }, 3000);
 }
 
-
+function togglePasswordVisibility() {
+    const passwordField = document.getElementById('password');
+    const eyeIcon = document.getElementById('togglePasswordVisibility');
+    if (passwordField.type === 'password') {
+        passwordField.type = 'text';
+        eyeIcon.classList.add('visible');
+    } else {
+        passwordField.type = 'password';
+        eyeIcon.classList.remove('visible');
+    }
+}
