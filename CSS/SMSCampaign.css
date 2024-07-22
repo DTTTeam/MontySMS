@@ -18,164 +18,15 @@
     padding: 20px;
     box-sizing: border-box;
     overflow-y: auto;
-    max-height: 100vh;
+    height: 100%; /* Ensures it fills the vertical space */
+    display: flex;
+    flex-direction: column;
 }
 
 header {
     text-align: center;
     margin-bottom: 10px;
 }
-
-.profile-info {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    font-size: 14px;
-    color: #25D366; /* WhatsApp green */
-    font-weight: bold;
-    margin-bottom: 10px;
-}
-
-form {
-    display: flex;
-    flex-direction: column;
-}
-
-.form-group {
-    margin-bottom: 15px;
-}
-
-    .form-group label {
-        margin-bottom: 5px;
-        font-weight: bold;
-        color: #333;
-        font-size: 14px;
-    }
-
-    .form-group input,
-    .form-group select,
-    .form-group textarea {
-        width: 100%;
-        padding: 10px;
-        box-sizing: border-box;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        font-size: 14px;
-        margin-bottom: 5px;
-    }
-
-    .form-group button {
-        background-color: #25D366; /* WhatsApp green */
-        color: white;
-        border: none;
-        padding: 10px;
-        font-size: 16px;
-        border-radius: 4px;
-        cursor: pointer;
-    }
-
-        .form-group button:hover {
-            background-color: #128C7E; /* Darker WhatsApp green */
-        }
-
-.loading {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-top: 10px;
-}
-
-.checkbox-list {
-    display: none; /* Hide by default */
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    max-height: 150px;
-    overflow-y: auto;
-    padding: 10px;
-    background-color: #f9f9f9;
-}
-
-    .checkbox-list label {
-        display: flex;
-        align-items: center;
-        margin-bottom: 5px;
-        cursor: pointer;
-        padding: 5px;
-        border-radius: 4px;
-        transition: background-color 0.3s ease;
-    }
-
-        .checkbox-list label:hover {
-            background-color: #e0e0e0;
-        }
-
-    .checkbox-list input[type="checkbox"] {
-        margin-right: 10px;
-        width: 16px;
-        height: 16px;
-    }
-
-    .checkbox-list label:last-child {
-        margin-bottom: 0;
-    }
-
-.loading {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-top: 10px;
-}
-
-    .loading img {
-        width: 50px; /* Adjust the width as needed */
-        height: 50px; /* Adjust the height as needed */
-    }
-
-.button-group {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 20px;
-}
-
-.btn {
-    display: flex;
-    align-items: center;
-    background-color: #25D366; /* WhatsApp green */
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    font-size: 16px;
-    border-radius: 4px;
-    cursor: pointer;
-    text-decoration: none;
-    transition: background-color 0.3s ease;
-}
-
-    .btn img {
-        margin-right: 10px;
-        width: 24px;
-        height: 24px;
-    }
-
-    .btn:hover {
-        background-color: #128C7E; /* Darker WhatsApp green */
-    }
-
-#backButton {
-    background-color: #ed204c; /* Red */
-}
-
-    #backButton:hover {
-        background-color: #d11a3b; /* Darker Red */
-    }
-
-#launchButton {
-    background-color: #25D366; /* WhatsApp green */
-}
-
-    #launchButton:hover {
-        background-color: #128C7E; /* Darker WhatsApp green */
-    }
 
 .balance-container {
     display: flex;
@@ -218,6 +69,128 @@ form {
     width: fit-content;
 }
 
+form {
+    display: flex;
+    flex-direction: column;
+    width: 100%; /* Ensure form takes the full width of the container */
+}
+
+.form-group {
+    margin-bottom: 15px;
+    position: relative;
+}
+
+    .form-group label {
+        margin-bottom: 5px;
+        font-weight: bold;
+        color: #333;
+        font-size: 14px;
+    }
+
+.input-icon-container {
+    display: flex;
+    align-items: center;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #f0f0f0;
+    padding: 10px;
+    position: relative;
+    width: 100%; /* Make sure it takes the full width */
+    box-sizing: border-box;
+}
+
+    .input-icon-container i {
+        font-size: 18px;
+        color: #888;
+        margin-right: 10px;
+    }
+
+    .input-icon-container input,
+    .input-icon-container select,
+    .input-icon-container textarea {
+        width: 100%;
+        border: none;
+        background: none;
+        outline: none;
+        font-size: 14px;
+    }
+
+        .input-icon-container input::placeholder,
+        .input-icon-container textarea::placeholder {
+            color: #999;
+        }
+
+    .input-icon-container .message-icon {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+    }
+
+.form-group button {
+    background-color: #ed204c;
+    color: white;
+    border: none;
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+    .form-group button:hover {
+        background-color: #b71c1c;
+    }
+
+.loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+    .loading img {
+        width: 50px; /* Adjust the width as needed */
+        height: 50px; /* Adjust the height as needed */
+    }
+
+.checkbox-list {
+    display: none; /* Hide by default */
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    max-height: 150px;
+    overflow-y: auto;
+    padding: 10px;
+    background-color: #f9f9f9;
+    width: 100%; /* Make it match the width of the search input */
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+    position: absolute;
+    z-index: 1000;
+}
+
+    .checkbox-list label {
+        display: flex;
+        align-items: center;
+        margin-bottom: 5px;
+        cursor: pointer;
+        padding: 5px;
+        border-radius: 4px;
+        transition: background-color 0.3s ease;
+    }
+
+        .checkbox-list label:hover {
+            background-color: #e0e0e0;
+        }
+
+    .checkbox-list input[type="checkbox"] {
+        margin-right: 10px;
+        width: 16px;
+        height: 16px;
+    }
+
+    .checkbox-list label:last-child {
+        margin-bottom: 0;
+    }
+
 .message-container {
     margin-top: 15px;
 }
@@ -242,7 +215,13 @@ form {
         margin-right: 5px;
     }
 
-#placeholderButton, #urlButton {
+.button-group-container {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Add some spacing between buttons */
+}
+
+.circle-button {
     background-color: #ed204c;
     color: white;
     border: none;
@@ -258,30 +237,55 @@ form {
     height: 40px; /* Fix height */
 }
 
-.checkbox-list {
-    display: none;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    max-height: 150px;
-    overflow-y: auto;
-    padding: 10px;
-    background-color: #f9f9f9;
-    width: 100%; /* Make it match the width of the search input */
-    box-sizing: border-box; /* Include padding and border in the element's total width and height */
-    position: absolute;
-    z-index: 1000;
+    .circle-button:hover {
+        background-color: #b71c1c;
+    }
+
+.button-group {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
 }
 
-
-.form-group {
-    position: relative; /* Ensure relative positioning for absolute children */
-}
-
-.button-group-container {
+.btn {
     display: flex;
     align-items: center;
-    gap: 10px; /* Add some spacing between buttons */
+    background-color: #ed204c;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
 }
+
+    .btn img {
+        margin-right: 10px;
+        width: 24px;
+        height: 24px;
+    }
+
+    .btn:hover {
+        background-color: #b71c1c;
+    }
+
+#backButton {
+    background-color: #ed204c; /* Red */
+}
+
+    #backButton:hover {
+        background-color: #b71c1c; /* Darker Red */
+    }
+
+#launchButton {
+    background-color: #ed204c; /* Red */
+}
+
+    #launchButton:hover {
+        background-color: #b71c1c; /* Darker Red */
+    }
 
 #urlDialog {
     display: none;
@@ -319,6 +323,7 @@ form {
         display: flex;
         justify-content: space-between;
     }
+
 .notification {
     display: none;
     position: fixed;
@@ -345,3 +350,6 @@ form {
     .notification.success {
         background-color: #5cb85c;
     }
+.required {
+    color: red;
+}
