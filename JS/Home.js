@@ -23,6 +23,21 @@ Office.onReady((info) => {
             togglePasswordIcon.addEventListener('click', togglePasswordVisibility);
         }
     });
+
+    // Example MutationObserver usage to replace DOMNodeInserted
+    const targetNode = document.getElementById('someElement');
+    const config = { childList: true, subtree: true };
+
+    const callback = function (mutationsList, observer) {
+        for (let mutation of mutationsList) {
+            if (mutation.type === 'childList') {
+                // Handle the addition of new nodes
+            }
+        }
+    };
+
+    const observer = new MutationObserver(callback);
+    observer.observe(targetNode, config);
 });
 
 function openRegisterPage() {

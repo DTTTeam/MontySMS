@@ -263,3 +263,10 @@ footer p.copyright {
     font-weight: bold; /* Make the text bold */
     margin-top: 20px; /* Add margin to push the text down */
 }
+
+/* New CSS for Forced Colors Mode */
+@media (forced-colors: active) {
+    body {
+        forced-color-adjust: auto;
+    }
+}
