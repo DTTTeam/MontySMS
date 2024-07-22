@@ -424,7 +424,7 @@ function setupEventListeners(campaignId) {
     });
 
     document.getElementById('backButton').addEventListener('click', () => {
-        localStorage.setItem('backNavigation', 'true');
+        localStorage.setItem('login', 'true');
         window.location.href = 'SMSCampaign.html';
     });
 }
