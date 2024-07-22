@@ -25,19 +25,24 @@ Office.onReady((info) => {
     });
 
     // Example MutationObserver usage to replace DOMNodeInserted
-    const targetNode = document.getElementById('someElement');
-    const config = { childList: true, subtree: true };
+    const targetNode = document.getElementById('loginContainer');
+    if (targetNode) {
+        const config = { childList: true, subtree: true };
 
-    const callback = function (mutationsList, observer) {
-        for (let mutation of mutationsList) {
-            if (mutation.type === 'childList') {
-                // Handle the addition of new nodes
+        const callback = function (mutationsList, observer) {
+            for (let mutation of mutationsList) {
+                if (mutation.type === 'childList') {
+                    // Handle the addition of new nodes
+                    console.log('A child node has been added or removed.');
+                }
             }
-        }
-    };
+        };
 
-    const observer = new MutationObserver(callback);
-    observer.observe(targetNode, config);
+        const observer = new MutationObserver(callback);
+        observer.observe(targetNode, config);
+    } else {
+        console.error('Target node not found. Ensure the ID is correct and the element exists.');
+    }
 });
 
 function openRegisterPage() {
