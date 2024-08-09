@@ -1273,7 +1273,8 @@ async function validateCampaignWithFile(campaignName, campaignContent, senderId,
                 LongUrl: longUrl,
                 ClientAccountId: localStorage.getItem('clientId'),
                 Variables: placeholders,
-                HasBlacklistShortUrl: false
+                HasBlacklistShortUrl: false,
+                ServiceTag:"ONE_WAY_SMS"
             }));
             formData.append('LongUrlFromFile', "false");
 
